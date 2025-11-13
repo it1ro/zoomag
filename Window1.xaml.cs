@@ -28,7 +28,7 @@ namespace prriva_10
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "Файл Excel|*.xlsx"; // Обычно ClosedXML работает с .xlsx
+            openDialog.Filter = "Файлы Excel|*.xlsx;*.xls;*.xlsm|Все файлы|*.*";
             if (openDialog.ShowDialog() == true)
             {
                 using (var workbook = new XLWorkbook(openDialog.FileName))

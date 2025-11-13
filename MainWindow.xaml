@@ -27,26 +27,26 @@
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
-        <TextBlock Text="Новая категория" FontSize="25" Grid.ColumnSpan="2"></TextBlock>
-        <TextBlock Text="Новая ед/изм" FontSize="25" Grid.ColumnSpan="2" Grid.Row="2"> </TextBlock>
-        <TextBlock Text="Товар" FontSize="25"  Grid.Row="4" > </TextBlock>
-        <TextBlock Text="ед/изм" FontSize="25"  Grid.Row="6" Grid.Column="0" ></TextBlock>
-        <TextBlock Text="стоимость" FontSize="25"  Grid.Row="7" Grid.Column="0" ></TextBlock>
-        <TextBlock Text="категория" FontSize="25"  Grid.Row="8" Grid.Column="0" ></TextBlock>
-        <TextBlock Text="Кол_во" FontSize="25"  Grid.Row="5" Grid.Column="0" ></TextBlock>
-        <TextBox Grid.Row="5" x:Name="kol_vo" Grid.Column="1" Grid.ColumnSpan="1" SelectionTextBrush="Black" FontSize="15" Margin="10,10,10,10"></TextBox>
-        <TextBox Grid.Row="1" x:Name="new_kat" Grid.Column="1" Grid.ColumnSpan="2" SelectionTextBrush="Black" FontSize="15" Margin="10,10,10,10"></TextBox>
-        <TextBox Grid.Row="3" x:Name="new_ed" Grid.Column="1" Grid.ColumnSpan="2" SelectionTextBrush="Black" FontSize="15" Margin="10,10,10,10"></TextBox>
-        <TextBox Grid.Row="4"  x:Name="tovar" Grid.Column="1" Grid.ColumnSpan="1" SelectionTextBrush="Black" FontSize="15" Margin="10,10,10,10"></TextBox>
-        <TextBox Grid.Row="7" x:Name="price" Grid.Column="1" Grid.ColumnSpan="1" SelectionTextBrush="Black" FontSize="15" Margin="10,10,10,10"></TextBox>
-        <Button Grid.Column="4" Grid.Row="0" Grid.ColumnSpan="5" Content="добавление категории" FontSize="20" Click="Dob_kat" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="4" Grid.Row="1" Grid.ColumnSpan="5" Content="заполнение ед/изм" FontSize="20" Click="Zap" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="4" Grid.Row="2" Grid.ColumnSpan="5" Content="ввод товаров" FontSize="20" Click="Vvod" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="4" Grid.Row="3" Grid.ColumnSpan="5" Content="Привоз" FontSize="20" Click="Privoz" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="4" Grid.Row="4" Grid.ColumnSpan="5" Content="Продажа" FontSize="20" Click="Prodajas" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="4" Grid.Row="5" Grid.ColumnSpan="5" Content="Склад" FontSize="20" Click="Sklad" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="4" Grid.Row="5" Grid.ColumnSpan="5" Content="Отчеты" FontSize="20" Click="Otchet" Margin="10,10,10,10"></Button>
-        <ComboBox Name="ed_izmm" Grid.Row="6" Grid.Column="1"/>
-        <ComboBox Name="kat" Grid.Row="8" Grid.Column="1" />
+        <TextBlock Text="Новая категория"     FontSize="25" Grid.ColumnSpan="2"                    Grid.Row="0"></TextBlock>
+        <TextBlock Text="Новая ед/изм"       FontSize="25" Grid.ColumnSpan="2"                    Grid.Row="2"></TextBlock>
+        <TextBlock Text="Товар"              FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="4"></TextBlock>
+        <TextBlock Text="ед/изм"             FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="6" Grid.Column="0"></TextBlock>
+        <TextBlock Text="стоимость"          FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="7" Grid.Column="0"></TextBlock>
+        <TextBlock Text="категория"          FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="8" Grid.Column="0"></TextBlock>
+        <TextBlock Text="Кол_во"             FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="5" Grid.Column="0"></TextBlock>
+        <TextBox   x:Name="kol_vo"           FontSize="15" Grid.ColumnSpan="1" Margin="10,10,10,10" Grid.Row="5" Grid.Column="1"></TextBox>
+        <TextBox   x:Name="new_kat"          FontSize="15" Grid.ColumnSpan="2" Margin="10,10,10,10" Grid.Row="1" Grid.Column="1"></TextBox>
+        <TextBox   x:Name="new_ed"           FontSize="15" Grid.ColumnSpan="2" Margin="10,10,10,10" Grid.Row="3" Grid.Column="1"></TextBox>
+        <TextBox   x:Name="tovar"            FontSize="15" Grid.ColumnSpan="1" Margin="10,10,10,10" Grid.Row="4" Grid.Column="1"></TextBox>
+        <TextBox   x:Name="price"            FontSize="15" Grid.ColumnSpan="1" Margin="10,10,10,10" Grid.Row="7" Grid.Column="1"></TextBox>
+        <Button    Content="добавление категории" FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="0" Grid.Column="4" Click="Dob_kat"></Button>
+        <Button    Content="заполнение ед/изм"    FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="1" Grid.Column="4" Click="Zap"></Button>
+        <Button    Content="ввод товаров"         FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="2" Grid.Column="4" Click="Vvod"></Button>
+        <Button    Content="Привоз"              FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="3" Grid.Column="4" Click="Privoz"></Button>
+        <Button    Content="Продажа"             FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="4" Grid.Column="4" Click="Prodajas"></Button>
+        <Button    Content="Склад"               FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="5" Grid.Column="4" Click="Sklad"></Button>
+        <Button    Content="Отчеты"              FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="5" Grid.Column="4" Click="Otchet"></Button>
+        <ComboBox  Name="ed_izmm"                                       Grid.ColumnSpan="1"                Grid.Row="6" Grid.Column="1"></ComboBox>
+        <ComboBox  Name="kat"                                           Grid.ColumnSpan="1"                Grid.Row="8" Grid.Column="1"></ComboBox>
     </Grid>
 </Window>

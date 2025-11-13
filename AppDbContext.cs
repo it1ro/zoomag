@@ -17,11 +17,15 @@ namespace prriva_10
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            
             // для работы в классе (закомментировать дома)
             // optionsBuilder.UseSqlServer("Data Source=DESKTOP-03J9O0A;DataBase=ValeevaTovarDb; Trusted_Connection = True; TrustServerCertificate = True;");
             
-            // для чилла, для расслабона (закомментировать в классе)
+             // для localdb
             optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=ValeevaTovarDb;Trusted_Connection=true;TrustServerCertificate=true;");
+            
+            // для домашнео сервера ms sql
+            // optionsBuilder.UseSqlServer("Data Source=DESKTOP-03J9O0A;DataBase=ValeevaTovarDb; Trusted_Connection = True; TrustServerCertificate = True;");
         }
     }
 }
