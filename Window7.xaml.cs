@@ -1,78 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using ClosedXML.Excel; // Заменили using Excel = Microsoft.Office.Interop.Excel;
+using ClosedXML.Excel;
 
 namespace prriva_10
 {
-    /// <summary>
-    /// Логика взаимодействия для Window7.xaml
-    /// </summary>
     public partial class Window7 : Window
     {
         public Window7()
         {
             InitializeComponent();
+            // Установка текущей даты по умолчанию
+            DeliveryDatePicker.SelectedDate = DateTime.Today;
+            LoadData();
+        }
+
+        private void LoadData()
+        {
+            if (DeliveryDatePicker.SelectedDate == null)
+                return;
+
+            DateTime selectedDate = DeliveryDatePicker.SelectedDate.Value.Date;
+
+            try
+            {
+                using (var context = new AppDbContext())
+                {
+                    var deliveries = context.Privozs.ToList();
+
+                    var reportItems = new List<ReportItem>();
+                    int totalSum = 0;
+                    int totalQuantity = 0;
+
+                    foreach (var delivery in deliveries)
+                    {
+                        DateTime deliveryDate;
+                        // Парсим дату из строки - предполагаем формат "dd.MM.yyyy" или подобный
+                        if (DateTime.TryParse(delivery.Data, out deliveryDate) && 
+                            deliveryDate.Date == selectedDate.Date)
+                        {
+                            int itemTotal = delivery.Price * delivery.Kolvo;
+                            reportItems.Add(new ReportItem
+                            {
+                                Name = delivery.Name,
+                                Kolvo = delivery.Kolvo,
+                                Price = delivery.Price,
+                                Total = itemTotal
+                            });
+
+                            totalSum += itemTotal;
+                            totalQuantity += delivery.Kolvo;
+                        }
+                    }
+
+                    // Обновление интерфейса
+                    sum.Text = totalSum.ToString();
+                    kol_tov.Text = totalQuantity.ToString();
+                    dataGrid.ItemsSource = reportItems;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке данных: {ex.Message}", 
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            DateTime selestedDate = Convert.ToDateTime(z1.SelectedDate);
-            string d = selestedDate.ToString("MMMM d,yyyy");
-            var context = new AppDbContext();
-            var q = from dd in context.Privozs
-                    select new { dd.Data, dd.Name, dd.Price, dd.Kolvo };
+            LoadData();
+        }
 
-            using (var workbook = new XLWorkbook())
-            {
-                var ws = workbook.Worksheets.Add("Отчет по поступлению товаров за день");
-
-                ws.Cell(1, 1).Value = "отчет о поступлении товаров за день на";
-                ws.Cell(1, 4).Value = d;
-
-                ws.Cell(3, 3).Value = "Наименование";
-                ws.Cell(3, 6).Value = "Количество";
-                ws.Cell(3, 5).Value = "Цена";
-                ws.Cell(3, 1).Value = "Дата";
-
-                int summ = 0;
-                int kol_vo = 0;
-                int row = 4;
-                int w = 0;
-                foreach (var item in q)
-                {
-                    if (d == item.Data)
-                    {
-                        ws.Cell(row, 3).Value = item.Name;
-                        ws.Cell(row, 6).Value = item.Kolvo;
-                        ws.Cell(row, 5).Value = item.Price;
-                        ws.Cell(row, 1).Value = item.Data;
-                        row++;
-                        w++;
-                        summ += item.Kolvo * item.Price;
-                        kol_vo += item.Kolvo;
-                    }
-                }
-
-                ws.Cell(w + 5, 1).Value = w + " товаров";
-                ws.Cell(w + 7, 1).Value = "Итого=" + summ + " рубля";
-
-                string fileName = $@"C:\Users\student\Desktop\Отчет поступления товаров за день на {DateTime.Today:MMMM d,yyyy}.xlsx";
-                workbook.SaveAs(fileName);
-
-                sum.Text = summ.ToString();
-                kol_tov.Text = kol_vo.ToString();
-            }
+        private void ResetFilter_Click(object sender, RoutedEventArgs e)
+        {
+            DeliveryDatePicker.SelectedDate = DateTime.Today;
+            LoadData();
         }
 
         private void nazad(object sender, RoutedEventArgs e)
@@ -84,9 +88,17 @@ namespace prriva_10
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            Window8 dalee = new Window8();
+            Window8 nextWindow = new Window8();
             this.Hide();
-            dalee.Show();
+            nextWindow.Show();
         }
+    }
+
+    public class ReportItem
+    {
+        public string Name { get; set; }
+        public int Kolvo { get; set; }
+        public int Price { get; set; }
+        public int Total { get; set; }
     }
 }
