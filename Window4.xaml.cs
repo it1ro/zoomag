@@ -116,42 +116,22 @@ namespace prriva_10
             this.Hide();
             main.Show();
         }
-        private void null_poz(object sender, RoutedEventArgs e)
-        {
-            var context = new AppDbContext();
-            var q = from dd in context.Tovar
-                    where dd.Kol_vo == 0 // фильтруем в LINQ
-                    select new { dd.Name };
-
-            using (var workbook = new XLWorkbook())
-            {
-                var ws = workbook.Worksheets.Add("Нулевые позиции");
-
-                ws.Cell(1, 1).Value = "Нулевые позиции на ";
-                ws.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
-
-                ws.Cell(3, 1).Value = "Наименование";
-
-                int row = 4;
-                int w = 0;
-                foreach (var item in q)
-                {
-                    ws.Cell(row, 1).Value = item.Name;
-                    row++;
-                    w++;
-                }
-
-                ws.Cell(w + 5, 1).Value = w + " наименований";
-
-                string fileName = $@"C:\Users\student\Desktop\Нулевые позиции на {DateTime.Today:MMMM d,yyyy}.xlsx";
-                workbook.SaveAs(fileName);
-            }
-        }
         private void cat(object sender, RoutedEventArgs e)
         {
             Window6 main = new Window6();
             this.Hide();
             main.Show();
         }
+        
+        // Файл: prriva_10/Window4.xaml.cs
+
+        private void null_poz(object sender, RoutedEventArgs e)
+        {
+            Window9 nullWindow = new Window9();
+            this.Hide(); // Скрываем текущее окно (Window4)
+            nullWindow.Show(); // Показываем новое окно
+        }
+        
+        
     }
 }
