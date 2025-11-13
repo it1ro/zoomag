@@ -12,7 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Excel = Microsoft.Office.Interop.Excel;
+using ClosedXML.Excel; // Заменили using Excel = Microsoft.Office.Interop.Excel;
 
 namespace prriva_10
 {
@@ -25,38 +25,42 @@ namespace prriva_10
         {
             InitializeComponent();
         }
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "Файл Excel|*XLSX;*.XLS";
+            openDialog.Filter = "Файл Excel|*.xlsx"; // Обычно ClosedXML работает с .xlsx
             if (openDialog.ShowDialog() == true)
             {
-                Excel.Application ExcelApp = new Excel.Application();
-                Excel.Workbook WorkBookExcel = ExcelApp.Workbooks.Open(openDialog.FileName);
-                Excel.Worksheet WorkSheetExcel = (Excel.Worksheet)WorkBookExcel.Sheets[1];
-
-                Excel.Range ExcelRange = WorkSheetExcel.UsedRange;
-                int rowCount = ExcelRange.Rows.Count;
-                string[] list = new string[100];
-                for (int i = 1; i < (int)rowCount; i++)
+                using (var workbook = new XLWorkbook(openDialog.FileName))
                 {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        ExcelRange = WorkSheetExcel.Cells[i + 1, j + 1] as Excel.Range;
-                        if (ExcelRange != null && ExcelRange.Value2 != null)
-                        {
-                            list[j] = ExcelRange.Value2.ToString();
-                        }
-                        else list[j] = "";
+                    var ws = workbook.Worksheets.Worksheet(1); // или .Worksheet("ИмяЛиста")
+                    var lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
 
+                    for (int i = 2; i <= lastRow; i++) // начинаем с 2, т.к. 1 — заголовки
+                    {
+                        string naim = ws.Cell(i, 1).IsEmpty() ? "" : ws.Cell(i, 1).GetString();
+                        string ed = ws.Cell(i, 2).IsEmpty() ? "" : ws.Cell(i, 2).GetString();
+                        string kol_voStr = ws.Cell(i, 3).IsEmpty() ? "0" : ws.Cell(i, 3).GetString();
+                        string cenaStr = ws.Cell(i, 4).IsEmpty() ? "0" : ws.Cell(i, 4).GetString();
+
+                        if (int.TryParse(kol_voStr, out int kol_vo) && int.TryParse(cenaStr, out int cena))
+                        {
+                            var data = new Test
+                            {
+                                data = DateTime.Today.ToString("MMMM d,yyyy"),
+                                naim = naim,
+                                ed = ed,
+                                kol_vo = kol_vo,
+                                cena = cena
+                            };
+                            dg.Items.Add(data);
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Неверный формат данных в строке {i}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
                     }
-                        var data = new Test { data = DateTime.Today.ToString("MMMM d,yyyy"), naim = list[0], ed = list[1], kol_vo = Convert.ToInt32(list[2]), cena = Convert.ToInt32(list[3])};
-                        dg.Items.Add(data);
                 }
-                WorkBookExcel.Close(false, Type.Missing, Type.Missing);
-                ExcelApp.Quit();
-                GC.Collect();
             }
         }
 
@@ -66,7 +70,7 @@ namespace prriva_10
             for (int i = 0; i < dg.Items.Count; i++)
             {
                 Test path = dg.Items[i] as Test;
-                var priv1 = new Privozs { Data = path.data, Name = path.naim,Kolvo =path.kol_vo , Price = path.cena };
+                var priv1 = new Privozs { Data = path.data, Name = path.naim, Kolvo = path.kol_vo, Price = path.cena };
                 Context.Privozs.Add(priv1);
                 var tovar = Context.Tovar.Where(x => x.Name == path.naim).FirstOrDefault();
                 if (tovar != null)
@@ -77,7 +81,6 @@ namespace prriva_10
                 else
                 {
                     var ed = Context.Izmers.Find(1);
-
                     if (path.cena < 100)
                     {
                         var kat = Context.Kategors.Find(1);
@@ -91,12 +94,10 @@ namespace prriva_10
                         };
                         Context.Tovar.Add(newtovar1);
                         Context.SaveChanges();
-
                     }
                     else
                     {
                         var kat = Context.Kategors.Find(2);
-
                         var newtovar2 = new Tovars
                         {
                             Name = path.naim,
@@ -106,14 +107,11 @@ namespace prriva_10
                             Kategor = kat
                         };
                         Context.Tovar.Add(newtovar2);
-                       
                     }
-
                 }
                 Context.SaveChanges();
             }
-            
-            }
+        }
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {

@@ -11,7 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Excel = Microsoft.Office.Interop.Excel;
+using ClosedXML.Excel; // Заменили using Excel = Microsoft.Office.Interop.Excel;
 
 namespace prriva_10
 {
@@ -31,52 +31,48 @@ namespace prriva_10
             string d = selestedDate.ToString("MMMM d,yyyy");
             var context = new AppDbContext();
             var q = from dd in context.Privozs
-                    select new { dd.Data, dd.Name, dd.Price, dd.Kolvo};
+                    select new { dd.Data, dd.Name, dd.Price, dd.Kolvo };
 
-            Excel.Application exapp = new Excel.Application();
-            Excel.Workbook exwor;
-            Excel.Worksheet exsheet;
-            exapp.SheetsInNewWorkbook = 2;
-            exwor = exapp.Workbooks.Add();
-
-            exsheet = (Excel.Worksheet)exwor.Worksheets.get_Item(1);
-            exsheet.Cells[1, 1] = "отчет о поступлении товаров за день на";
-            exsheet.Cells[1, 4] = d;
-            exsheet.Cells[3, 3] = "Наименование";
-            exsheet.Cells[3, 6] = "Количество";
-            exsheet.Cells[3, 5] = "Цена";
-            exsheet.Cells[3, 1] = "Дата";
-            int summ = 0;
-            int shtuk = 0;
-            int kol_vo = 0;
-            int row = 4;
-            int w = 0;
-            foreach (var item in q)
+            using (var workbook = new XLWorkbook())
             {
-                if (d == item.Data)
+                var ws = workbook.Worksheets.Add("Отчет по поступлению товаров за день");
+
+                ws.Cell(1, 1).Value = "отчет о поступлении товаров за день на";
+                ws.Cell(1, 4).Value = d;
+
+                ws.Cell(3, 3).Value = "Наименование";
+                ws.Cell(3, 6).Value = "Количество";
+                ws.Cell(3, 5).Value = "Цена";
+                ws.Cell(3, 1).Value = "Дата";
+
+                int summ = 0;
+                int kol_vo = 0;
+                int row = 4;
+                int w = 0;
+                foreach (var item in q)
                 {
-                    exsheet.Cells[row, 3].Value = item.Name;
-                    exsheet.Cells[row, 6].Value = item.Kolvo;
-                    exsheet.Cells[row, 5].Value = item.Price;
-                    exsheet.Cells[row, 1].Value = item.Data;
-                    shtuk += item.Kolvo;
-                    row++;
-                    w++;
-                    summ += item.Kolvo * item.Price;
-                    kol_vo += item.Kolvo;
+                    if (d == item.Data)
+                    {
+                        ws.Cell(row, 3).Value = item.Name;
+                        ws.Cell(row, 6).Value = item.Kolvo;
+                        ws.Cell(row, 5).Value = item.Price;
+                        ws.Cell(row, 1).Value = item.Data;
+                        row++;
+                        w++;
+                        summ += item.Kolvo * item.Price;
+                        kol_vo += item.Kolvo;
+                    }
                 }
+
+                ws.Cell(w + 5, 1).Value = w + " товаров";
+                ws.Cell(w + 7, 1).Value = "Итого=" + summ + " рубля";
+
+                string fileName = $@"C:\Users\student\Desktop\Отчет поступления товаров за день на {DateTime.Today:MMMM d,yyyy}.xlsx";
+                workbook.SaveAs(fileName);
+
+                sum.Text = summ.ToString();
+                kol_tov.Text = kol_vo.ToString();
             }
-            exapp.Visible = true;
-            exsheet.Cells[w + 5, 1] = Convert.ToString(w) + " товаров";
-            exsheet.Cells[w + 7, 1] = "Итог=" + Convert.ToString(summ) + " рубля";
-            exwor.Saved = true;
-            exapp.DisplayAlerts = false;
-            sum.Text = Convert.ToString(summ);
-            kol_tov.Text = Convert.ToString(kol_vo);
-
-            exwor.SaveAs(@"C:\Users\student\Desktop/Отчет поступления товаров за день на " + DateTime.Today.ToString("MMMM d,yyyy") + ".xlsx");
-            exapp.Quit();
-
         }
 
         private void nazad(object sender, RoutedEventArgs e)
