@@ -65,7 +65,7 @@
                 
                 <Button Grid.Column="1" 
                         x:Name="RefreshButton" 
-                        Content="Обновить список" 
+                        Content="Очистить поиск" 
                         Click="RefreshProductList" 
                         FontSize="12"
                         Height="35"

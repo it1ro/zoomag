@@ -1,5 +1,4 @@
-﻿// File: Zoomag/Views/SaleWindow.xaml.cs
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Zoomag.Data;
@@ -105,6 +104,7 @@ namespace Zoomag.Views
                 // Если товар уже есть в чеке, увеличиваем количество
                 existingItem.Quantity++;
                 existingItem.Total = existingItem.Quantity * existingItem.Price;
+                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
             }
             else
             {
@@ -117,6 +117,7 @@ namespace Zoomag.Views
                     Quantity = 1,
                     Total = selectedProductDto.Price
                 });
+                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
             }
 
             UpdateReceiptDisplay();
@@ -130,6 +131,7 @@ namespace Zoomag.Views
             if (receiptItem != null)
             {
                 _receiptItems.Remove(receiptItem);
+                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
                 UpdateReceiptDisplay();
             }
         }
@@ -145,91 +147,92 @@ namespace Zoomag.Views
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 _receiptItems.Clear();
+                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
                 UpdateReceiptDisplay();
             }
         }
 
         private void FinalizeCurrentSale(object sender, RoutedEventArgs e)
-{
-    if (_receiptItems.Count == 0)
-    {
-        MessageBox.Show("Чек пуст! Добавьте товары перед покупкой.",
-                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-        return;
-    }
-
-    using var context = new AppDbContext();
-    try
-    {
-        // Проверяем наличие товара на складе
-        bool hasInsufficientStock = false;
-        var insufficientProducts = new List<string>();
-
-        foreach (var receiptItem in _receiptItems)
         {
-            var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-            if (product != null && product.Amount < receiptItem.Quantity)
+            if (_receiptItems.Count == 0)
             {
-                hasInsufficientStock = true;
-                insufficientProducts.Add($"{product.Name} (требуется {receiptItem.Quantity}, доступно {product.Amount})");
+                MessageBox.Show("Чек пуст! Добавьте товары перед покупкой.",
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var context = new AppDbContext();
+            try
+            {
+                // Проверяем наличие товара на складе
+                bool hasInsufficientStock = false;
+                var insufficientProducts = new List<string>();
+
+                foreach (var receiptItem in _receiptItems)
+                {
+                    var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
+                    if (product != null && product.Amount < receiptItem.Quantity)
+                    {
+                        hasInsufficientStock = true;
+                        insufficientProducts.Add($"{product.Name} (требуется {receiptItem.Quantity}, доступно {product.Amount})");
+                    }
+                }
+
+                if (hasInsufficientStock)
+                {
+                    string message = "Недостаточно товара на складе:\n" + string.Join("\n", insufficientProducts);
+                    MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return; // Не завершаем продажу
+                }
+
+                // Обновляем количество на складе
+                foreach (var receiptItem in _receiptItems)
+                {
+                    var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
+                    if (product != null)
+                    {
+                        product.Amount -= receiptItem.Quantity;
+                    }
+                }
+
+                // Создаём запись о продаже
+                var sale = new Sale
+                {
+                    Name = $"Продажа от {DateTime.Now:dd.MM.yyyy HH:mm}",
+                    Date = DateTime.Now.ToString("dd.MM.yyyy HH:mm"),
+                    Price = _receiptItems.Sum(r => r.Total),
+                    Amount = _receiptItems.Sum(r => r.Quantity)
+                };
+
+                context.Sale.Add(sale);
+                context.SaveChanges(); // Сохраняем продажу, чтобы получить Id
+
+                // Создаём связи продажа-товар
+                foreach (var receiptItem in _receiptItems)
+                {
+                    var saleItem = new SaleItem
+                    {
+                        SaleId = sale.Id,
+                        ProductId = receiptItem.ProductId
+                    };
+                    context.SaleItem.Add(saleItem);
+                }
+
+                context.SaveChanges(); // Сохраняем связи
+
+                MessageBox.Show($"Покупка успешно оформлена!\nОбщая сумма: {_receiptItems.Sum(r => r.Total)} руб.",
+                        "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                _receiptItems.Clear();
+                UpdateReceiptDisplay();
+                LoadAllData(); // Обновляем список товаров
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при оформлении покупки: {ex.Message}", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        if (hasInsufficientStock)
-        {
-            string message = "Недостаточно товара на складе:\n" + string.Join("\n", insufficientProducts);
-            MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        // Обновляем количество на складе
-        foreach (var receiptItem in _receiptItems)
-        {
-            var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-            if (product != null)
-            {
-                product.Amount -= receiptItem.Quantity;
-            }
-        }
-
-        // Создаём запись о продаже
-        var sale = new Sale
-        {
-            Name = $"Продажа от {DateTime.Now:dd.MM.yyyy HH:mm}",
-            Date = DateTime.Now.ToString("dd.MM.yyyy HH:mm"),
-            Price = _receiptItems.Sum(r => r.Total),
-            Amount = _receiptItems.Sum(r => r.Quantity)
-        };
-
-        context.Sale.Add(sale);
-        context.SaveChanges(); // Сохраняем продажу, чтобы получить Id
-
-        // Создаём связи продажа-товар
-        foreach (var receiptItem in _receiptItems)
-        {
-            var saleItem = new SaleItem
-            {
-                SaleId = sale.Id,
-                ProductId = receiptItem.ProductId
-            };
-            context.SaleItem.Add(saleItem);
-        }
-
-        context.SaveChanges(); // Сохраняем связи
-
-        MessageBox.Show($"Покупка успешно оформлена!\nОбщая сумма: {_receiptItems.Sum(r => r.Total)} руб.",
-                "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-
-        _receiptItems.Clear();
-        UpdateReceiptDisplay();
-        LoadAllData(); // Обновляем список товаров
-    }
-    catch (Exception ex)
-    {
-        MessageBox.Show($"Ошибка при оформлении покупки: {ex.Message}", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-    }
-}
 
         private void ReturnToMainMenu(object sender, RoutedEventArgs e)
         {
