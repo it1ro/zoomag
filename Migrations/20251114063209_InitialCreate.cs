@@ -126,7 +126,6 @@ namespace Zoomag.Migrations
                 {
                     SupplyId = table.Column<int>(type: "int", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<int>(type: "int", nullable: false),
                     Total = table.Column<int>(type: "int", nullable: false)

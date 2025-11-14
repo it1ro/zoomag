@@ -21,7 +21,7 @@ namespace Zoomag.Data
             {
                 // В реальных проектах строку подключения получают из IConfiguration (appsettings.json)
                 optionsBuilder.UseSqlServer(
-                    "Server=(localdb)\\mssqllocaldb;Database=ValeevaZoomagDb;Trusted_Connection=true;TrustServerCertificate=true;",
+                    "Server=(localdb)\\mssqllocaldb;Database=ValeevaZoomag;Trusted_Connection=true;TrustServerCertificate=true;",
                     options => options.EnableRetryOnFailure(3));
             }
         }

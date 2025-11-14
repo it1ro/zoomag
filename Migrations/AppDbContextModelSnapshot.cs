@@ -146,9 +146,6 @@ namespace Zoomag.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
                     b.Property<int>("Price")
                         .HasColumnType("int");
 

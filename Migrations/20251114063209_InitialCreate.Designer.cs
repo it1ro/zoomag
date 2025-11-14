@@ -12,7 +12,7 @@ using Zoomag.Data;
 namespace Zoomag.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251114052147_InitialCreate")]
+    [Migration("20251114063209_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -147,9 +147,6 @@ namespace Zoomag.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Id")
                         .HasColumnType("int");
 
                     b.Property<int>("Price")

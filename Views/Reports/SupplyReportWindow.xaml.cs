@@ -53,7 +53,6 @@ namespace Zoomag.Views.Reports
             var reportData = query
                 .Select(si => new SupplyReportItem
                 {
-                    Id = si.Id,
                     Date = si.Supply.Date,
                     Name = si.Product.Name,
                     Quantity = si.Quantity,
