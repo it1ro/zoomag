@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿// File: Zoomag/Views/AdminWindow.xaml.cs
+using System.Windows;
 using Zoomag.Data;
 using Zoomag.Models;
 using Zoomag.Views.Reports;
@@ -8,31 +9,28 @@ namespace Zoomag.Views
     /// <summary>
     /// Interaction logic for AdminWindow.xaml
     /// </summary>
-    public partial class AdminWindow : Window
+    public partial class AdminWindow : Window, IDisposable
     {
+        private readonly AppDbContext _context;
+
         public AdminWindow()
         {
             InitializeComponent();
+            _context = new AppDbContext();
             LoadUnits();
             LoadCategories();
         }
 
         private void LoadUnits()
         {
-            var context = new AppDbContext();
-            foreach (var item in context.Unit.ToList())
-            {
-                UnitSelector.Items.Add(item.Name);
-            }
+            UnitSelector.ItemsSource = _context.Unit.ToList();
+            UnitSelector.SelectedIndex = -1; // Очищаем выбор
         }
 
         private void LoadCategories()
         {
-            var context = new AppDbContext();
-            foreach (var item in context.Category.ToList())
-            {
-                CategorySelector.Items.Add(item.Name);
-            }
+            CategorySelector.ItemsSource = _context.Category.ToList();
+            CategorySelector.SelectedIndex = -1; // Очищаем выбор
         }
 
         private void AddCategory(object sender, RoutedEventArgs e)
@@ -40,11 +38,10 @@ namespace Zoomag.Views
             var categoryName = CategoryInput.Text;
             if (string.IsNullOrWhiteSpace(categoryName)) return;
 
-            var context = new AppDbContext();
             var category = new Category { Name = categoryName };
-            context.Category.Add(category);
-            context.SaveChanges();
-            CategorySelector.Items.Add(categoryName);
+            _context.Category.Add(category);
+            _context.SaveChanges();
+            LoadCategories(); // Обновляем список
             CategoryInput.Clear();
         }
 
@@ -53,11 +50,10 @@ namespace Zoomag.Views
             var unitName = UnitInput.Text;
             if (string.IsNullOrWhiteSpace(unitName)) return;
 
-            var context = new AppDbContext();
             var unit = new Unit { Name = unitName };
-            context.Unit.Add(unit);
-            context.SaveChanges();
-            UnitSelector.Items.Add(unitName);
+            _context.Unit.Add(unit);
+            _context.SaveChanges();
+            LoadUnits(); // Обновляем список
             UnitInput.Clear();
         }
 
@@ -68,9 +64,23 @@ namespace Zoomag.Views
                 string.IsNullOrWhiteSpace(QuantityInput.Text))
                 return;
 
-            var context = new AppDbContext();
-            var unit = context.Unit.Find(UnitSelector.SelectedIndex + 1);
-            var category = context.Category.Find(CategorySelector.SelectedIndex + 1);
+            if (UnitSelector.SelectedIndex < 0 || CategorySelector.SelectedIndex < 0)
+            {
+                MessageBox.Show("Пожалуйста, выберите единицу измерения и категорию.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var unitId = UnitSelector.SelectedIndex + 1; // Индекс + 1, если Id начинаются с 1
+            var categoryId = CategorySelector.SelectedIndex + 1;
+
+            var unit = _context.Unit.Find(unitId);
+            var category = _context.Category.Find(categoryId);
+
+            if (unit == null || category == null)
+            {
+                MessageBox.Show("Единица измерения или категория не найдены.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             var product = new Product
             {
@@ -81,9 +91,8 @@ namespace Zoomag.Views
                 Amount = Convert.ToInt32(QuantityInput.Text)
             };
 
-            context.Product.Add(product);
-            context.SaveChanges();
-
+            _context.Product.Add(product);
+            _context.SaveChanges();
             ClearProductForm();
         }
 
@@ -122,6 +131,17 @@ namespace Zoomag.Views
             var reportsWindow = new AdminReportsWindow();
             this.Hide();
             reportsWindow.Show();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _context?.Dispose();
+            base.OnClosed(e);
+        }
+
+        public void Dispose()
+        {
+            _context?.Dispose();
         }
     }
 }

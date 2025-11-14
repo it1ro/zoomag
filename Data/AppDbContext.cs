@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// File: Zoomag/Data/AppDbContext.cs
+using Microsoft.EntityFrameworkCore;
 using Zoomag.Models;
 
 namespace Zoomag.Data
@@ -8,15 +9,16 @@ namespace Zoomag.Data
         public DbSet<Unit> Unit { get; set; }
         public DbSet<Category> Category { get; set; }
         public DbSet<Product> Product { get; set; }
-        public DbSet<Supply> Supply { get; set; }  // ✅ Supply, не Receipt
+        public DbSet<Supply> Supply { get; set; }
         public DbSet<Sale> Sale { get; set; }
-        public DbSet<SupplyItem> SupplyItem { get; set; }  // ✅ SupplyItem, не SupplyItem
+        public DbSet<SupplyItem> SupplyItem { get; set; }
         public DbSet<SaleItem> SaleItem { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
+                // В реальных проектах строку подключения получают из IConfiguration (appsettings.json)
                 optionsBuilder.UseSqlServer(
                     "Server=(localdb)\\mssqllocaldb;Database=ValeevaZoomagDb;Trusted_Connection=true;TrustServerCertificate=true;",
                     options => options.EnableRetryOnFailure(3));
@@ -27,7 +29,7 @@ namespace Zoomag.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Связь Sale ↔ Product
+            // Связь Sale -> Product (многие-ко-многим с дополнительными полями)
             modelBuilder.Entity<SaleItem>()
                 .ToTable("SalesProducts")
                 .HasKey(si => new { si.SaleId, si.ProductId });
@@ -44,8 +46,9 @@ namespace Zoomag.Data
                 .HasForeignKey(si => si.ProductId)
                 .HasConstraintName("FK_SaleItem_Product");
 
-            // Связь Supply ↔ Product
+            // Связь Supply -> Product (многие-ко-многим с дополнительными полями)
             modelBuilder.Entity<SupplyItem>()
+                .ToTable("SupplyProducts") // Явно указываем имя таблицы для консистентности
                 .HasKey(si => new { si.SupplyId, si.ProductId });
 
             modelBuilder.Entity<SupplyItem>()
@@ -64,18 +67,20 @@ namespace Zoomag.Data
             modelBuilder.Entity<SaleItem>()
                 .HasIndex(si => si.SaleId)
                 .HasDatabaseName("IX_SaleItem_SaleId");
-
             modelBuilder.Entity<SaleItem>()
                 .HasIndex(si => si.ProductId)
                 .HasDatabaseName("IX_SaleItem_ProductId");
-
             modelBuilder.Entity<SupplyItem>()
                 .HasIndex(si => si.SupplyId)
                 .HasDatabaseName("IX_SupplyItem_SupplyId");
-
             modelBuilder.Entity<SupplyItem>()
                 .HasIndex(si => si.ProductId)
                 .HasDatabaseName("IX_SupplyItem_ProductId");
+
+            // Вычисляемый столбец для TotalAmount в Supply
+            modelBuilder.Entity<Supply>()
+                .Property(s => s.TotalAmount)
+                .HasComputedColumnSql("(SELECT SUM(si.Total) FROM SupplyItem si WHERE si.SupplyId = Id)", false);
         }
     }
 }

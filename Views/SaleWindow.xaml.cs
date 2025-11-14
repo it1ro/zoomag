@@ -1,16 +1,18 @@
-﻿using System.Windows;
+﻿// File: Zoomag/Views/SaleWindow.xaml.cs
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Zoomag.Data;
 using Zoomag.Models;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Zoomag.Views
 {
     public partial class SaleWindow : Window
     {
-        private List<Zoomag.Models.Product> _allProducts;
+        private List<ProductDisplayDto> _allProducts;
         private List<ReceiptItem> _receiptItems;
         private List<Category> _allCategories;
         private List<Unit> _allUnits;
@@ -33,18 +35,25 @@ namespace Zoomag.Views
             {
                 using (var context = new AppDbContext())
                 {
-                    _allProducts = context.Product.ToList();
+                    // Загружаем продукты с категорией и единицей измерения
+                    var products = context.Product
+                        .Include(p => p.Category)
+                        .Include(p => p.Unit)
+                        .ToList();
+
+                    // Создаем DTO для отображения, чтобы не изменять оригинальные сущности
+                    _allProducts = products.Select(p => new ProductDisplayDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        CategoryName = p.Category?.Name ?? "Без категории",
+                        UnitName = p.Unit?.Name ?? "шт",
+                        Price = p.Price,
+                        Qty = p.Amount
+                    }).ToList();
+
                     _allCategories = context.Category.ToList();
                     _allUnits = context.Unit.ToList();
-
-                    // Добавляем информацию о категориях и единицах измерения
-                    foreach (var product in _allProducts)
-                    {
-                        var category = _allCategories.FirstOrDefault(c => c.Id == product.Category.Id);
-                        var unit = _allUnits.FirstOrDefault(u => u.Id == product.Unit.Id);
-                        product.Category.Name = category?.Name ?? "Без категории";
-                        product.Unit.Name = unit?.Name ?? "шт";
-                    }
 
                     ProductListGrid.ItemsSource = _allProducts;
                 }
@@ -52,7 +61,7 @@ namespace Zoomag.Views
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки данных: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -64,13 +73,11 @@ namespace Zoomag.Views
         private void FilterProducts()
         {
             string searchTerm = SearchInput.Text?.Trim().ToLower() ?? "";
-
             var filteredProducts = _allProducts.Where(p =>
                 string.IsNullOrEmpty(searchTerm) ||
                 p.Name.ToLower().Contains(searchTerm) ||
-                p.Category.Name.ToLower().Contains(searchTerm)
+                p.CategoryName.ToLower().Contains(searchTerm)
             ).ToList();
-
             ProductListGrid.ItemsSource = filteredProducts;
         }
 
@@ -79,22 +86,20 @@ namespace Zoomag.Views
             if (ProductListGrid.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите товар для добавления в чек!",
-                    "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                        "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            var selectedProduct = (Zoomag.Models.Product)ProductListGrid.SelectedItem;
-
-            if (selectedProduct.Amount <= 0)
+            var selectedProductDto = (ProductDisplayDto)ProductListGrid.SelectedItem;
+            if (selectedProductDto.Qty <= 0)
             {
                 MessageBox.Show("Товар закончился на складе!",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             // Проверяем, есть ли уже этот товар в чеке
-            var existingItem = _receiptItems.FirstOrDefault(r => r.ProductId == selectedProduct.Id);
-
+            var existingItem = _receiptItems.FirstOrDefault(r => r.ProductId == selectedProductDto.Id);
             if (existingItem != null)
             {
                 // Если товар уже есть в чеке, увеличиваем количество
@@ -106,11 +111,11 @@ namespace Zoomag.Views
                 // Если товара нет в чеке, добавляем новую позицию
                 _receiptItems.Add(new ReceiptItem
                 {
-                    ProductId = selectedProduct.Id,
-                    Name = selectedProduct.Name,
-                    Price = selectedProduct.Price,
+                    ProductId = selectedProductDto.Id,
+                    Name = selectedProductDto.Name,
+                    Price = selectedProductDto.Price,
                     Quantity = 1,
-                    Total = selectedProduct.Price
+                    Total = selectedProductDto.Price
                 });
             }
 
@@ -122,7 +127,6 @@ namespace Zoomag.Views
             var button = sender as Button;
             var dataGridRow = FindParent<DataGridRow>(button);
             var receiptItem = dataGridRow?.DataContext as ReceiptItem;
-
             if (receiptItem != null)
             {
                 _receiptItems.Remove(receiptItem);
@@ -137,7 +141,6 @@ namespace Zoomag.Views
                 MessageBox.Show("Чек пуст!", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-
             if (MessageBox.Show("Вы уверены, что хотите очистить чек?", "Подтверждение",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
@@ -151,13 +154,15 @@ namespace Zoomag.Views
             if (_receiptItems.Count == 0)
             {
                 MessageBox.Show("Чек пуст! Добавьте товары перед покупкой.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Проверяем наличие товаров на складе
-            using (var context = new AppDbContext())
+            using var context = new AppDbContext();
+            using var transaction = context.Database.BeginTransaction(); // Используем транзакцию
+            try
             {
+                // Проверяем наличие товара на складе
                 bool hasInsufficientStock = false;
                 var insufficientProducts = new List<string>();
 
@@ -175,7 +180,7 @@ namespace Zoomag.Views
                 {
                     string message = "Недостаточно товара на складе:\n" + string.Join("\n", insufficientProducts);
                     MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    return; // Не завершаем продажу
                 }
 
                 // Обновляем количество на складе
@@ -188,7 +193,7 @@ namespace Zoomag.Views
                     }
                 }
 
-                // Создаем запись о продаже
+                // Создаём запись о продаже
                 var sale = new Sale
                 {
                     Name = $"Продажа от {DateTime.Now:dd.MM.yyyy HH:mm}",
@@ -198,9 +203,9 @@ namespace Zoomag.Views
                 };
 
                 context.Sale.Add(sale);
-                context.SaveChanges();
+                context.SaveChanges(); // Сохраняем продажу, чтобы получить Id
 
-                // Создаем связи продажа-товар
+                // Создаём связи продажа-товар
                 foreach (var receiptItem in _receiptItems)
                 {
                     var saleItem = new SaleItem
@@ -211,14 +216,22 @@ namespace Zoomag.Views
                     context.SaleItem.Add(saleItem);
                 }
 
-                context.SaveChanges();
+                context.SaveChanges(); // Сохраняем связи
+                transaction.Commit(); // Подтверждаем транзакцию
+
+                MessageBox.Show($"Покупка успешно оформлена!\nОбщая сумма: {_receiptItems.Sum(r => r.Total)} руб.",
+                        "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                _receiptItems.Clear();
+                UpdateReceiptDisplay();
+                LoadAllData(); // Обновляем список товаров
             }
-
-            MessageBox.Show($"Покупка успешно оформлена!\nОбщая сумма: {_receiptItems.Sum(r => r.Total)} руб.",
-                "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            _receiptItems.Clear();
-            UpdateReceiptDisplay();
+            catch (Exception ex)
+            {
+                transaction.Rollback(); // Откатываем транзакцию в случае ошибки
+                MessageBox.Show($"Ошибка при оформлении покупки: {ex.Message}", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ReturnToMainMenu(object sender, RoutedEventArgs e)
@@ -237,16 +250,14 @@ namespace Zoomag.Views
         private void ShowCategoryFilter(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Функция фильтрации по категории будет реализована в следующей версии.",
-                "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void UpdateReceiptDisplay()
         {
             ReceiptItemsGrid.ItemsSource = _receiptItems;
-
             int itemCount = _receiptItems.Sum(r => r.Quantity);
             int totalAmount = _receiptItems.Sum(r => r.Total);
-
             ItemCountDisplay.Text = itemCount.ToString();
             TotalAmountDisplay.Text = totalAmount.ToString();
         }
@@ -256,11 +267,21 @@ namespace Zoomag.Views
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);
             if (parentObject == null) return null;
-
             T parent = parentObject as T;
             if (parent != null) return parent;
             else return FindParent<T>(parentObject);
         }
+    }
+
+    // DTO для отображения товара в DataGrid
+    public class ProductDisplayDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string CategoryName { get; set; }
+        public string UnitName { get; set; }
+        public int Price { get; set; }
+        public int Qty { get; set; }
     }
 
     public class ReceiptItem

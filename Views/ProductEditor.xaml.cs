@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿// File: Zoomag/Views/ProductEditor.xaml.cs
+using System.Windows;
 using Microsoft.Win32;
 using ClosedXML.Excel;
 using Zoomag.Data;
@@ -20,13 +21,11 @@ namespace Zoomag.Views
             {
                 Filter = "Файлы Excel|*.xlsx;*.xls;*.xlsm|Все файлы|*.*"
             };
-
             if (openDialog.ShowDialog() != true) return;
 
             using var workbook = new XLWorkbook(openDialog.FileName);
             var worksheet = workbook.Worksheets.Worksheet(1);
             var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
-
             if (lastRow < 2)
             {
                 MessageBox.Show("Файл не содержит данных для импорта.", "Информация",
@@ -56,7 +55,6 @@ namespace Zoomag.Views
                     Quantity = quantity,
                     Price = price
                 };
-
                 SupplyDataGrid.Items.Add(supplyItem);
             }
         }
@@ -76,81 +74,101 @@ namespace Zoomag.Views
             }
 
             using var context = new AppDbContext();
-
-            for (int i = 0; i < SupplyDataGrid.Items.Count; i++)
+            using var transaction = context.Database.BeginTransaction(); // Используем транзакцию
+            try
             {
-                var item = SupplyDataGrid.Items[i] as SupplyImportViewModel;
-                if (item == null) continue;
+                var suppliesToSave = new List<Supply>();
+                var productsToSave = new List<Product>();
+                var supplyItemsToSave = new List<SupplyItem>();
 
-                // Создаём поставку
-                var supply = new Supply
+                for (int i = 0; i < SupplyDataGrid.Items.Count; i++)
                 {
-                    Date = item.Date,
-                    Name = $"Поставка {item.Name} от {item.Date:dd.MM.yyyy}"
-                };
+                    var item = SupplyDataGrid.Items[i] as SupplyImportViewModel;
+                    if (item == null) continue;
 
-                context.Supply.Add(supply);
-                context.SaveChanges(); // Сохраняем, чтобы получить Id
-
-                // Ищем существующий товар
-                var product = context.Product.FirstOrDefault(x => x.Name == item.Name);
-
-                if (product != null)
-                {
-                    // Обновляем существующий товар
-                    product.Amount += item.Quantity;
-                    if (product.Price < item.Price)
-                        product.Price = item.Price;
-                }
-                else
-                {
-                    // Создаём новый товар
-                    var unit = context.Unit.Find(1);
-                    if (unit == null)
+                    // Создаём поставку (пока без Id, он появится после SaveChanges)
+                    var supply = new Supply
                     {
-                        MessageBox.Show("Единица измерения не найдена!", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    var categoryId = item.Price < 100 ? 1 : 2; // Логика определения категории
-                    var category = context.Category.Find(categoryId);
-                    if (category == null)
-                    {
-                        MessageBox.Show($"Категория с Id {categoryId} не найдена!", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    var newProduct = new Product
-                    {
-                        Name = item.Name,
-                        Price = item.Price,
-                        Amount = item.Quantity,
-                        Unit = unit,
-                        Category = category
+                        Date = item.Date,
+                        Name = $"Поставка {item.Name} от {item.Date:dd.MM.yyyy}"
                     };
+                    suppliesToSave.Add(supply);
 
-                    context.Product.Add(newProduct);
-                    context.SaveChanges(); // Сохраняем, чтобы получить Id
-                    product = newProduct;
+                    // Ищем существующий товар
+                    var product = context.Product.FirstOrDefault(x => x.Name == item.Name);
+                    if (product != null)
+                    {
+                        // Обновляем существующий товар
+                        product.Amount += item.Quantity;
+                        if (product.Price < item.Price)
+                            product.Price = item.Price;
+                        // Объект product уже отслеживается контекстом, изменения будут сохранены
+                    }
+                    else
+                    {
+                        // Создаём новый товар
+                        var unit = context.Unit.Find(1); // Хардкод
+                        if (unit == null)
+                        {
+                            MessageBox.Show("Единица измерения не найдена!", "Ошибка",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                            transaction.Rollback(); // Откатываем транзакцию
+                            return;
+                        }
+                        var categoryId = item.Price < 100 ? 1 : 2; // Логика определения категории
+                        var category = context.Category.Find(categoryId); // Хардкод
+                        if (category == null)
+                        {
+                            MessageBox.Show($"Категория с Id {categoryId} не найдена!", "Ошибка",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                            transaction.Rollback(); // Откатываем транзакцию
+                            return;
+                        }
+                        var newProduct = new Product
+                        {
+                            Name = item.Name,
+                            Price = item.Price,
+                            Amount = item.Quantity,
+                            Unit = unit,
+                            Category = category
+                        };
+                        productsToSave.Add(newProduct);
+                        product = newProduct; // Обновляем ссылку
+                    }
+
+                    // Создаём элемент поставки (ссылки на supply и product пока не установлены)
+                    var supplyItem = new SupplyItem
+                    {
+                        // SupplyId будет установлен после сохранения Supply
+                        // ProductId будет установлен после сохранения Product
+                        Quantity = item.Quantity,
+                        Price = item.Price,
+                        Total = item.Quantity * item.Price // Устанавливаем Total
+                    };
+                    // Связываем с объектами в памяти, EF установит Id при SaveChanges
+                    supplyItem.Supply = supply;
+                    supplyItem.Product = product;
+                    supplyItemsToSave.Add(supplyItem);
                 }
 
-                // Создаём элемент поставки
-                var supplyItem = new SupplyItem
-                {
-                    SupplyId = supply.Id,
-                    ProductId = product.Id,
-                    Quantity = item.Quantity,
-                    Price = item.Price
-                };
+                // Добавляем все сущности в контекст
+                if (suppliesToSave.Any()) context.Supply.AddRange(suppliesToSave);
+                if (productsToSave.Any()) context.Product.AddRange(productsToSave);
+                if (supplyItemsToSave.Any()) context.SupplyItem.AddRange(supplyItemsToSave);
 
-                context.SupplyItem.Add(supplyItem);
+                // Сохраняем все изменения в транзакции
+                context.SaveChanges();
+                transaction.Commit(); // Подтверждаем транзакцию
+
+                MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
-
-            context.SaveChanges();
-            MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            catch (Exception ex)
+            {
+                transaction.Rollback(); // Откатываем транзакцию в случае ошибки
+                MessageBox.Show($"Ошибка при сохранении в базу: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public class SupplyImportViewModel
