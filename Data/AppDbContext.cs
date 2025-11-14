@@ -1,6 +1,7 @@
 ﻿// File: Zoomag/Data/AppDbContext.cs
 using Microsoft.EntityFrameworkCore;
 using Zoomag.Models;
+using System.Linq;
 
 namespace Zoomag.Data
 {
@@ -76,11 +77,6 @@ namespace Zoomag.Data
             modelBuilder.Entity<SupplyItem>()
                 .HasIndex(si => si.ProductId)
                 .HasDatabaseName("IX_SupplyItem_ProductId");
-
-            // Вычисляемый столбец для TotalAmount в Supply
-            modelBuilder.Entity<Supply>()
-                .Property(s => s.TotalAmount)
-                .HasComputedColumnSql("(SELECT SUM(si.Total) FROM SupplyItem si WHERE si.SupplyId = Id)", false);
         }
     }
 }

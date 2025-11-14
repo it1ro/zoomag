@@ -29,7 +29,6 @@ namespace Zoomag.Views.Reports
             var supplies = context.Supply
                 .Select(supply => new {
                     supply.Name,
-                    supply.TotalAmount,
                     supply.Date
                 })
                 .OrderBy(supply => supply.Name)
@@ -59,7 +58,6 @@ namespace Zoomag.Views.Reports
             foreach (var supply in supplies)
             {
                 worksheet.Cell(row, 1).Value = supply.Name;
-                worksheet.Cell(row, 3).Value = supply.TotalAmount;
                 worksheet.Cell(row, 7).Value = supply.Date;
                 row++;
             }
