@@ -8,7 +8,6 @@ namespace Zoomag.Models
 {
     public class SaleItem
     {
-        // Составной ключ: SaleId + ProductId
         public int SaleId { get; set; }
         public int ProductId { get; set; }
         public Sale Sale { get; set; }

@@ -5,11 +5,11 @@ namespace Zoomag.Data
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<Product> Product { get; set; }
-        public DbSet<Sale> Sale { get; set; }
-        public DbSet<Category> Category { get; set; }
         public DbSet<Unit> Unit { get; set; }
+        public DbSet<Category> Category { get; set; }
+        public DbSet<Product> Product { get; set; }
         public DbSet<Supply> Supply { get; set; }  // ✅ Supply, не Receipt
+        public DbSet<Sale> Sale { get; set; }
         public DbSet<SupplyItem> SupplyItem { get; set; }  // ✅ SupplyItem, не SupplyItem
         public DbSet<SaleItem> SaleItem { get; set; }
 
@@ -18,7 +18,7 @@ namespace Zoomag.Data
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseSqlServer(
-                    "Server=(localdb)\\mssqllocaldb;Database=ValeevaDb;Trusted_Connection=true;TrustServerCertificate=true;",
+                    "Server=(localdb)\\mssqllocaldb;Database=ValeevaZoomagDb;Trusted_Connection=true;TrustServerCertificate=true;",
                     options => options.EnableRetryOnFailure(3));
             }
         }
