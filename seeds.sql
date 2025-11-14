@@ -1,23 +1,18 @@
-
--- Сбрасываем счетчики ID (если используется IDENTITY)
-DBCC CHECKIDENT('Unit', RESEED, 0);
-DBCC CHECKIDENT('Category', RESEED, 0);
-DBCC CHECKIDENT('Product', RESEED, 0);
-DBCC CHECKIDENT('Supply', RESEED, 0);
-DBCC CHECKIDENT('Sale', RESEED, 0);
-
--- 1. Инструкция очистки базы данных
--- -------------------------------
--- Удаляем дочерние таблицы (с внешними ключами) первыми
+-- 1. ОЧИСТКА: сначала дочерние таблицы
 DELETE FROM SupplyProducts;
 DELETE FROM SalesProducts;
 DELETE FROM Product;
--- Удаляем родительские таблицы
 DELETE FROM Supply;
 DELETE FROM Sale;
 DELETE FROM Category;
 DELETE FROM Unit;
 
+-- 2. СБРОС СЧЁТЧИКОВ
+DBCC CHECKIDENT('Unit', RESEED, 0);
+DBCC CHECKIDENT('Category', RESEED, 0);
+DBCC CHECKIDENT('Product', RESEED, 0);
+DBCC CHECKIDENT('Supply', RESEED, 0);
+DBCC CHECKIDENT('Sale', RESEED, 0);
 
 -- 2. Сиды данных
 -- --------------
