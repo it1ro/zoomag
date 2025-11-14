@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace prriva_10
+namespace Zoomag
 {
     /// <summary>
     /// Interaction logic for App.xaml

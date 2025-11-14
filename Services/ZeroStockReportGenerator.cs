@@ -1,14 +1,17 @@
-// Файл: prriva_10/Services/ZeroStockReportGenerator.cs
+// Файл: Zoomag/Services/ZeroStockReportGenerator.cs
 
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore; // <- Добавь это
 using Microsoft.Win32; // <- Для SaveFileDialog
 using System;
 using System.Linq;
-using System.Windows; // <- Для MessageBox
+using System.Windows;
+using Zoomag.Data; // <- Для MessageBox
 
-namespace prriva_10.Services
+namespace Zoomag.Services
 {
+    using Data;
+
     public class ZeroStockReportGenerator
     {
         private readonly AppDbContext _context;
@@ -21,16 +24,16 @@ namespace prriva_10.Services
         public string GenerateReport(string outputPath = null)
         {
             // 1. Получаем товары с нулевым остатком, подгружая связи
-            var zeroStockItems = _context.Tovar
-                .Include(t => t.Kategor) // Подгружаем категории
-                .Include(t => t.Izmer)   // Подгружаем единицы измерения
-                .Where(t => t.Kol_vo == 0)
+            var zeroStockItems = _context.Product
+                .Include(t => t.Category) // Подгружаем категории
+                .Include(t => t.Unit)   // Подгружаем единицы измерения
+                .Where(t => t.Amount == 0)
                 .Select(t => new
                 {
                     t.Name,
-                    // Теперь безопасно обращаемся к Typ, т.к. связи подгружены
-                    Category = t.Kategor != null ? t.Kategor.Typ : "Без категории",
-                    Unit = t.Izmer != null ? t.Izmer.Typ : "Без ед.изм.",
+                    // Теперь безопасно обращаемся к Name, т.к. связи подгружены
+                    Category = t.Category != null ? t.Category.Name : "Без категории",
+                    Unit = t.Unit != null ? t.Unit.Name : "Без ед.изм.",
                     t.Price
                 })
                 .OrderBy(x => x.Name)

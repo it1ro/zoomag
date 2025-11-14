@@ -94,7 +94,7 @@ StyleCopReport.xml
 *.vspscc
 *.vssscc
 .builds
-*.pidb
+*.pIdb
 *.svclog
 *.scc
 
@@ -124,7 +124,7 @@ ipch/
 # TFS 2012 Local Workspace
 $tf/
 
-# Guidance Automation Toolkit
+# GuIdance Automation Toolkit
 *.gpState
 
 # ReSharper is a .NET coding add-in
@@ -341,7 +341,7 @@ ASALocalRun/
 # MSBuild Binary and Structured Log
 *.binlog
 
-# NVidia Nsight GPU debugger configuration file
+# NVIdia Nsight GPU debugger configuration file
 *.nvuser
 
 # MFractors (Xamarin productivity tool) working folder
@@ -356,9 +356,9 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
-# Ionide (cross platform F# VS Code tools) working folder
-.ionide/
+# IonIde (cross platform F# VS Code tools) working folder
+.ionIde/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-.idea/
+.Idea/

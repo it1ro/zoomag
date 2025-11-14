@@ -1,0 +1,251 @@
+﻿<Window x:Class="Zoomag.Views.SaleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2009"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:Zoomag"
+        mc:Ignorable="d"
+        Title="Продажа товаров" 
+        Height="700" 
+        Width="1200"
+        MinHeight="600"
+        MinWidth="1000"
+        FontFamily="Segoe UI" 
+        WindowState="Normal"
+        WindowStartupLocation="CenterScreen"
+        Background="#f8f9fa">
+    
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>        <!-- Заголовок -->
+            <RowDefinition Height="Auto"/>        <!-- Поиск и фильтры -->
+            <RowDefinition Height="*"/>           <!-- Таблица товаров -->
+            <RowDefinition Height="Auto"/>        <!-- Информация о чеке -->
+            <RowDefinition Height="Auto"/>        <!-- Таблица чека -->
+            <RowDefinition Height="Auto"/>        <!-- Кнопки управления -->
+        </Grid.RowDefinitions>
+        
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0" 
+                   Text="Продажа товаров" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,15"/>
+        
+        <!-- Поиск и фильтры -->
+        <Border Grid.Row="1" 
+                BorderBrush="#dee2e6" 
+                BorderThickness="1" 
+                CornerRadius="4" 
+                Padding="10" 
+                Margin="0,0,0,10"
+                Background="White">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="Поиск товара:" 
+                               FontSize="12" 
+                               VerticalAlignment="Center"
+                               Margin="0,0,5,0"/>
+                    <TextBox x:Name="SearchTextBox" 
+                             FontSize="14"
+                             Height="35"
+                             Padding="10,0"
+                             VerticalContentAlignment="Center"
+                             Margin="0,0,10,0"
+                             TextChanged="SearchTextBox_TextChanged"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                        Content="Обновить список" 
+                        Click="RefreshList_Click" 
+                        FontSize="12"
+                        Height="35"
+                        Padding="15,5" 
+                        Margin="0,0,5,0"
+                        Background="#6c757d" 
+                        Foreground="White"/>
+                
+                <Button Grid.Column="2" 
+                        Content="Фильтр по категории" 
+                        Click="FilterByCategory_Click" 
+                        FontSize="12"
+                        Height="35"
+                        Padding="15,5" 
+                        Background="#0d6efd" 
+                        Foreground="White"/>
+            </Grid>
+        </Border>
+        
+        <!-- Таблица товаров -->
+        <DataGrid x:Name="ProductsGrid" 
+                  Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  Background="White"
+                  BorderBrush="#dee2e6"
+                  BorderThickness="1"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  SelectionMode="Single"
+                  Margin="0,0,0,10"
+                  FontSize="13">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Наименование" 
+                                    Binding="{Binding Name}" 
+                                    Width="*"/>
+                <DataGridTextColumn Header="Категория" 
+                                    Binding="{Binding CategoryName}" 
+                                    Width="120"/>
+                <DataGridTextColumn Header="Ед. изм." 
+                                    Binding="{Binding UnitName}" 
+                                    Width="80"/>
+                <DataGridTextColumn Header="Цена" 
+                                    Binding="{Binding Price, StringFormat={}{0:F0}}" 
+                                    Width="100"/>
+                <DataGridTextColumn Header="Остаток" 
+                                    Binding="{Binding Qty}" 
+                                    Width="80"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <!-- Информация о чеке -->
+        <Border Grid.Row="3" 
+                Background="#e9ecef" 
+                BorderBrush="#dee2e6" 
+                BorderThickness="1" 
+                CornerRadius="4" 
+                Padding="15" 
+                Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="Товаров в чеке:" 
+                               FontSize="14" 
+                               FontWeight="SemiBold" 
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <TextBlock x:Name="ItemCountText" 
+                               Text="0" 
+                               FontSize="18" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0">
+                    <TextBlock Text="Общая сумма:" 
+                               FontSize="14" 
+                               FontWeight="SemiBold" 
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <TextBlock x:Name="TotalAmountText" 
+                               Text="0" 
+                               FontSize="18" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="руб." 
+                               FontSize="12" 
+                               VerticalAlignment="Center" 
+                               Foreground="#6c757d"/>
+                </StackPanel>
+                
+                <Button Grid.Column="2" 
+                        Content="Очистить чек" 
+                        Click="ClearReceipt_Click" 
+                        FontSize="12"
+                        Height="35"
+                        Padding="15,5" 
+                        Margin="0,0,5,0"
+                        Background="#dc3545" 
+                        Foreground="White"/>
+                
+                <Button Grid.Column="3" 
+                        Content="Добавить в чек" 
+                        Click="AddToReceipt_Click" 
+                        FontSize="12"
+                        Height="35"
+                        Padding="20,5" 
+                        Background="#28a745" 
+                        Foreground="White"/>
+            </Grid>
+        </Border>
+        
+        <!-- Таблица чека -->
+        <DataGrid x:Name="ReceiptGrid" 
+                  Grid.Row="4"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="False"
+                  CanUserAddRows="False"
+                  Background="White"
+                  BorderBrush="#dee2e6"
+                  BorderThickness="1"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  Margin="0,0,0,10"
+                  FontSize="13">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Наименование" 
+                                    Binding="{Binding Name}" 
+                                    Width="*"/>
+                <DataGridTextColumn Header="Цена" 
+                                    Binding="{Binding Price, StringFormat={}{0:F0}}" 
+                                    Width="100"/>
+                <DataGridTextColumn Header="Кол-во" 
+                                    Binding="{Binding Quantity}" 
+                                    Width="80"/>
+                <DataGridTextColumn Header="Сумма" 
+                                    Binding="{Binding Total, StringFormat={}{0:F0}}" 
+                                    Width="100"/>
+                <DataGridTemplateColumn Header="Действия" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Удалить" 
+                                    Click="RemoveFromReceipt_Click"
+                                    FontSize="10"
+                                    Padding="8,2"
+                                    Background="#dc3545"
+                                    Foreground="White"
+                                    Margin="2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <!-- Кнопки управления -->
+        <StackPanel Grid.Row="5" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,10,0,0">
+            <Button Content="Купить" 
+                    Click="Buy_Click" 
+                    FontSize="16"
+                    Height="45"
+                    Padding="30,10" 
+                    Margin="0,0,10,0"
+                    Background="#28a745" 
+                    Foreground="White"/>
+            <Button Content="Назад в главное меню" 
+                    Click="Back_Click" 
+                    FontSize="16"
+                    Height="45"
+                    Padding="30,10" 
+                    Background="#6c757d" 
+                    Foreground="White"/>
+        </StackPanel>
+    </Grid>
+</Window>
