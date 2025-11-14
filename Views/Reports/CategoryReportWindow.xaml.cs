@@ -2,14 +2,11 @@
 using System.Windows.Controls;
 using ClosedXML.Excel;
 using Zoomag.Data;
-
-// Заменили using Excel = Microsoft.Office.Interop.Excel;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Zoomag.Views.Reports
 {
-    using Data;
-    using Microsoft.EntityFrameworkCore;
-
     /// <summary>
     /// Логика взаимодействия для CategoryReportWindow.xaml
     /// </summary>
@@ -18,75 +15,88 @@ namespace Zoomag.Views.Reports
         public CategoryReportWindow()
         {
             InitializeComponent();
-            var context = new AppDbContext();
-            foreach (var item in context.Category.ToList())
+            LoadCategories();
+        }
+
+        private void LoadCategories()
+        {
+            using var context = new AppDbContext();
+            foreach (var category in context.Category.ToList())
             {
-                kat.Items.Add(item.Name);
+                CategorySelector.Items.Add(category.Name);
             }
         }
-        private void viv_v_excel_Click(object sender, RoutedEventArgs e)
+
+        private void ExportToExcel(object sender, RoutedEventArgs e)
         {
-            if (kat.SelectedItem == null)
+            if (CategorySelector.SelectedItem == null)
             {
-                MessageBox.Show("Пожалуйста, выберите категорию.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Пожалуйста, выберите категорию.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var context = new AppDbContext();
-            var selectedCategory = kat.SelectedItem.ToString();
-            var q = from dd in context.Product
-                    where dd.Category.Name == selectedCategory
-                    select new { dd.Name, dd.Amount, dd.Price, dd.Category, dd.Unit };
+            using var context = new AppDbContext();
+            var selectedCategory = CategorySelector.SelectedItem.ToString();
+            var products = context.Product
+                .Where(product => product.Category.Name == selectedCategory)
+                .Select(product => new {
+                    product.Name,
+                    product.Amount,
+                    product.Price,
+                    product.Category,
+                    product.Unit
+                });
 
-            using (var workbook = new XLWorkbook())
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Отчет по категории");
+
+            worksheet.Cell(1, 1).Value = "Отчет по категориям на";
+            worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
+
+            worksheet.Cell(3, 1).Value = "Наименование";
+            worksheet.Cell(3, 3).Value = "Количество";
+            worksheet.Cell(3, 5).Value = "Цена";
+            worksheet.Cell(3, 7).Value = "Категория";
+            worksheet.Cell(3, 9).Value = "Ед/изм";
+
+            int row = 4;
+            int productCount = 0;
+
+            foreach (var product in products)
             {
-                var ws = workbook.Worksheets.Add("Отчет по категории");
-
-                ws.Cell(1, 1).Value = "Отчет по категориям на ";
-                ws.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
-
-                ws.Cell(3, 1).Value = "Наименование";
-                ws.Cell(3, 3).Value = "Количество";
-                ws.Cell(3, 5).Value = "Цена";
-                ws.Cell(3, 7).Value = "Категория";
-                ws.Cell(3, 9).Value = "ед/изм";
-
-                int row = 4;
-                int w = 0;
-                foreach (var item in q)
-                {
-                    ws.Cell(row, 1).Value = item.Name;
-                    ws.Cell(row, 3).Value = item.Amount;
-                    ws.Cell(row, 5).Value = item.Price;
-                    ws.Cell(row, 7).Value = item.Category.Name;
-                    ws.Cell(row, 9).Value = item.Unit.Name;
-                    row++;
-                    w++;
-                }
-
-                ws.Cell(w + 5, 1).Value = w + " товаров";
-
-                string fileName = $@"C:\Users\student\Desktop\Журнал категории {DateTime.Today:MMMM d,yyyy}.xlsx";
-                workbook.SaveAs(fileName);
+                worksheet.Cell(row, 1).Value = product.Name;
+                worksheet.Cell(row, 3).Value = product.Amount;
+                worksheet.Cell(row, 5).Value = product.Price;
+                worksheet.Cell(row, 7).Value = product.Category.Name;
+                worksheet.Cell(row, 9).Value = product.Unit.Name;
+                row++;
+                productCount++;
             }
+
+            worksheet.Cell(productCount + 5, 1).Value = $"{productCount} товаров";
+
+            string fileName = $@"C:\Users\student\Desktop\Журнал категории {DateTime.Today:MMMM d,yyyy}.xlsx";
+            workbook.SaveAs(fileName);
         }
-        private void nazad_Click(object sender, RoutedEventArgs e)
+
+        private void GoToAdmin(object sender, RoutedEventArgs e)
         {
-            AdminWindow main = new AdminWindow();
+            var adminWindow = new AdminWindow();
             this.Hide();
-            main.Show();
+            adminWindow.Show();
         }
-        private void kat_SelectionChanged(object sender, SelectionChangedEventArgs e)
+
+        private void OnCategoryChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (kat.SelectedItem != null)
-            {
-                var context = new AppDbContext();
-                dg6.ItemsSource = context.Product
-                    .Include(t => t.Category)
-                    .Include(t => t.Unit)
-                    .Where(t => t.Category.Name == kat.SelectedItem.ToString())
-                    .ToList();
-            }
+            if (CategorySelector.SelectedItem == null) return;
+
+            using var context = new AppDbContext();
+            CategoryProductsGrid.ItemsSource = context.Product
+                .Include(product => product.Category)
+                .Include(product => product.Unit)
+                .Where(product => product.Category.Name == CategorySelector.SelectedItem.ToString())
+                .ToList();
         }
     }
 }

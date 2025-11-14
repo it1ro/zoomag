@@ -1,128 +1,132 @@
 ﻿using System.Windows;
-using ClosedXML.Excel;
 using Zoomag.Data;
-
-// Заменили using Excel = Microsoft.Office.Interop.Excel;
+using Zoomag.Views.Reports;
 
 namespace Zoomag.Views.Reports
 {
+    using ClosedXML.Excel;
+
     /// <summary>
     /// Логика взаимодействия для AdminReportsWindow.xaml
     /// </summary>
     public partial class AdminReportsWindow : Window
     {
-        int sum = 0;
+        private int _totalStockValue = 0;
+
         public AdminReportsWindow()
         {
             InitializeComponent();
         }
-        private void nazad(object sender, RoutedEventArgs e)
+
+        private void GoToAdmin(object sender, RoutedEventArgs e)
         {
-            AdminWindow main = new AdminWindow();
+            var adminWindow = new AdminWindow();
             this.Hide();
-            main.Show();
+            adminWindow.Show();
         }
-        private void price_list(object sender, RoutedEventArgs e)
+
+        private void GeneratePriceList(object sender, RoutedEventArgs e)
         {
             var context = new AppDbContext();
-            var q = from dd in context.Product
-                    where dd.Amount > 0 // фильтруем в LINQ, как и было
-                    select new { dd.Name, dd.Price, dd.Amount };
+            var products = context.Product
+                .Where(product => product.Amount > 0)
+                .Select(product => new { product.Name, product.Price, product.Amount });
 
             using (var workbook = new XLWorkbook())
             {
-                var ws = workbook.Worksheets.Add("Прайс-лист");
+                var worksheet = workbook.Worksheets.Add("Прайс-лист");
 
-                ws.Cell(1, 1).Value = "Прайс-лист на";
-                ws.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
+                worksheet.Cell(1, 1).Value = "Прайс-лист на";
+                worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
 
-                ws.Cell(3, 1).Value = "Наименование";
-                ws.Cell(3, 3).Value = "Цена";
-                ws.Cell(3, 5).Value = "Количество";
+                worksheet.Cell(3, 1).Value = "Наименование";
+                worksheet.Cell(3, 3).Value = "Цена";
+                worksheet.Cell(3, 5).Value = "Количество";
 
                 int row = 4;
-                int w = 0;
-                foreach (var item in q)
+                int productCount = 0;
+
+                foreach (var product in products)
                 {
-                    ws.Cell(row, 1).Value = item.Name;
-                    ws.Cell(row, 3).Value = item.Price;
-                    ws.Cell(row, 5).Value = item.Amount;
+                    worksheet.Cell(row, 1).Value = product.Name;
+                    worksheet.Cell(row, 3).Value = product.Price;
+                    worksheet.Cell(row, 5).Value = product.Amount;
                     row++;
-                    w++;
+                    productCount++;
                 }
 
-                ws.Cell(w + 5, 1).Value = w + " товаров";
+                worksheet.Cell(productCount + 5, 1).Value = $"{productCount} товаров";
 
                 string fileName = $@"C:\Users\student\Desktop\Прайс-лист на {DateTime.Today:MMMM d,yyyy}.xlsx";
                 workbook.SaveAs(fileName);
-                // Excel автоматически откроется, если пользователь откроет файл по умолчанию для .xlsx
             }
         }
-        private void post_tov(object sender, RoutedEventArgs e)
+
+        private void ViewIncomingGoodsJournal(object sender, RoutedEventArgs e)
         {
-            IncomingGoodsJournalWindow main = new IncomingGoodsJournalWindow();
+            var journalWindow = new IncomingGoodsJournalWindow();
             this.Hide();
-            main.Show();
+            journalWindow.Show();
         }
-        private void otch_sklad(object sender, RoutedEventArgs e)
+
+        private void GenerateStockReport(object sender, RoutedEventArgs e)
         {
             var context = new AppDbContext();
-            var q = from dd in context.Product
-                    select new { dd.Name, dd.Price, dd.Amount };
+            var products = context.Product
+                .Select(product => new { product.Name, product.Price, product.Amount });
 
             using (var workbook = new XLWorkbook())
             {
-                var ws = workbook.Worksheets.Add("Отчет по складу");
+                var worksheet = workbook.Worksheets.Add("Отчет по складу");
 
-                ws.Cell(1, 1).Value = "Отчет по складу на ";
-                ws.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
+                worksheet.Cell(1, 1).Value = "Отчет по складу на";
+                worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
 
-                ws.Cell(3, 1).Value = "Наименование";
-                ws.Cell(3, 3).Value = "Цена";
-                ws.Cell(3, 5).Value = "Количество";
+                worksheet.Cell(3, 1).Value = "Наименование";
+                worksheet.Cell(3, 3).Value = "Цена";
+                worksheet.Cell(3, 5).Value = "Количество";
 
                 int row = 4;
-                int w = 0;
-                sum = 0; // обнуляем сумму перед подсчетом
-                foreach (var item in q)
+                int productCount = 0;
+                _totalStockValue = 0;
+
+                foreach (var product in products)
                 {
-                    ws.Cell(row, 1).Value = item.Name;
-                    ws.Cell(row, 3).Value = item.Price;
-                    ws.Cell(row, 5).Value = item.Amount;
-                    sum += item.Price * item.Amount;
+                    worksheet.Cell(row, 1).Value = product.Name;
+                    worksheet.Cell(row, 3).Value = product.Price;
+                    worksheet.Cell(row, 5).Value = product.Amount;
+                    _totalStockValue += product.Price * product.Amount;
                     row++;
-                    w++;
+                    productCount++;
                 }
 
-                ws.Cell(w + 5, 1).Value = w + " товаров";
-                ws.Cell(w + 7, 1).Value = sum + " сумма";
+                worksheet.Cell(productCount + 5, 1).Value = $"{productCount} товаров";
+                worksheet.Cell(productCount + 7, 1).Value = $"{_totalStockValue} сумма";
 
                 string fileName = $@"C:\Users\student\Desktop\Отчет по складу на {DateTime.Today:MMMM d,yyyy}.xlsx";
                 workbook.SaveAs(fileName);
             }
         }
-        private void post_day(object sender, RoutedEventArgs e)
+
+        private void ViewDailyReceiptReport(object sender, RoutedEventArgs e)
         {
-            DailyGoodsReceiptReportWindow main = new DailyGoodsReceiptReportWindow();
+            var reportWindow = new DailyGoodsReceiptReportWindow();
             this.Hide();
-            main.Show();
+            reportWindow.Show();
         }
-        private void cat(object sender, RoutedEventArgs e)
+
+        private void ViewCategoryReport(object sender, RoutedEventArgs e)
         {
-            CategoryReportWindow main = new CategoryReportWindow();
+            var reportWindow = new CategoryReportWindow();
             this.Hide();
-            main.Show();
+            reportWindow.Show();
         }
 
-        // Файл: Zoomag/AdminReportsWindow.xaml.cs
-
-        private void null_poz(object sender, RoutedEventArgs e)
+        private void ViewZeroStockReport(object sender, RoutedEventArgs e)
         {
-            ZeroStockReportWindow nullWindow = new ZeroStockReportWindow();
-            this.Hide(); // Скрываем текущее окно (AdminReportsWindow)
-            nullWindow.Show(); // Показываем новое окно
+            var reportWindow = new ZeroStockReportWindow();
+            this.Hide();
+            reportWindow.Show();
         }
-
-
     }
 }

@@ -54,18 +54,19 @@
                                FontSize="12" 
                                VerticalAlignment="Center"
                                Margin="0,0,5,0"/>
-                    <TextBox x:Name="SearchTextBox" 
+                    <TextBox x:Name="SearchInput" 
                              FontSize="14"
                              Height="35"
                              Padding="10,0"
                              VerticalContentAlignment="Center"
                              Margin="0,0,10,0"
-                             TextChanged="SearchTextBox_TextChanged"/>
+                             TextChanged="SearchInput_TextChanged"/>
                 </StackPanel>
                 
                 <Button Grid.Column="1" 
+                        x:Name="RefreshButton" 
                         Content="Обновить список" 
-                        Click="RefreshList_Click" 
+                        Click="RefreshProductList" 
                         FontSize="12"
                         Height="35"
                         Padding="15,5" 
@@ -74,8 +75,9 @@
                         Foreground="White"/>
                 
                 <Button Grid.Column="2" 
+                        x:Name="FilterButton" 
                         Content="Фильтр по категории" 
-                        Click="FilterByCategory_Click" 
+                        Click="ShowCategoryFilter" 
                         FontSize="12"
                         Height="35"
                         Padding="15,5" 
@@ -85,7 +87,7 @@
         </Border>
         
         <!-- Таблица товаров -->
-        <DataGrid x:Name="ProductsGrid" 
+        <DataGrid x:Name="ProductListGrid" 
                   Grid.Row="2"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
@@ -139,7 +141,7 @@
                                FontWeight="SemiBold" 
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"/>
-                    <TextBlock x:Name="ItemCountText" 
+                    <TextBlock x:Name="ItemCountDisplay" 
                                Text="0" 
                                FontSize="18" 
                                FontWeight="Bold" 
@@ -152,7 +154,7 @@
                                FontWeight="SemiBold" 
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"/>
-                    <TextBlock x:Name="TotalAmountText" 
+                    <TextBlock x:Name="TotalAmountDisplay" 
                                Text="0" 
                                FontSize="18" 
                                FontWeight="Bold" 
@@ -164,8 +166,9 @@
                 </StackPanel>
                 
                 <Button Grid.Column="2" 
+                        x:Name="ClearReceiptButton" 
                         Content="Очистить чек" 
-                        Click="ClearReceipt_Click" 
+                        Click="ClearCurrentReceipt" 
                         FontSize="12"
                         Height="35"
                         Padding="15,5" 
@@ -174,8 +177,9 @@
                         Foreground="White"/>
                 
                 <Button Grid.Column="3" 
+                        x:Name="AddToReceiptButton" 
                         Content="Добавить в чек" 
-                        Click="AddToReceipt_Click" 
+                        Click="AddSelectedProductToReceipt" 
                         FontSize="12"
                         Height="35"
                         Padding="20,5" 
@@ -185,7 +189,7 @@
         </Border>
         
         <!-- Таблица чека -->
-        <DataGrid x:Name="ReceiptGrid" 
+        <DataGrid x:Name="ReceiptItemsGrid" 
                   Grid.Row="4"
                   AutoGenerateColumns="False"
                   IsReadOnly="False"
@@ -214,7 +218,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="Удалить" 
-                                    Click="RemoveFromReceipt_Click"
+                                    Click="RemoveItemFromReceipt"
                                     FontSize="10"
                                     Padding="8,2"
                                     Background="#dc3545"
@@ -231,16 +235,18 @@
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     Margin="0,10,0,0">
-            <Button Content="Купить" 
-                    Click="Buy_Click" 
+            <Button x:Name="FinalizeSaleButton" 
+                    Content="Купить" 
+                    Click="FinalizeCurrentSale" 
                     FontSize="16"
                     Height="45"
                     Padding="30,10" 
                     Margin="0,0,10,0"
                     Background="#28a745" 
                     Foreground="White"/>
-            <Button Content="Назад в главное меню" 
-                    Click="Back_Click" 
+            <Button x:Name="BackToMainMenuButton" 
+                    Content="Назад в главное меню" 
+                    Click="ReturnToMainMenu" 
                     FontSize="16"
                     Height="45"
                     Padding="30,10" 

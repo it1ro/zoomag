@@ -13,81 +13,115 @@ namespace Zoomag.Views
         public AdminWindow()
         {
             InitializeComponent();
+            LoadUnits();
+            LoadCategories();
+        }
+
+        private void LoadUnits()
+        {
             var context = new AppDbContext();
             foreach (var item in context.Unit.ToList())
             {
-                ed_izmm.Items.Add(item.Name);
+                UnitSelector.Items.Add(item.Name);
             }
+        }
+
+        private void LoadCategories()
+        {
+            var context = new AppDbContext();
             foreach (var item in context.Category.ToList())
             {
-                kat.Items.Add(item.Name);
+                CategorySelector.Items.Add(item.Name);
             }
-
         }
 
-
-
-        private void Dob_kat(object sender, RoutedEventArgs e)
+        private void AddCategory(object sender, RoutedEventArgs e)
         {
-            var a = new_kat.Text;
+            var categoryName = CategoryInput.Text;
+            if (string.IsNullOrWhiteSpace(categoryName)) return;
+
             var context = new AppDbContext();
-            var kateg = new Category { Name = a };
-            context.Category.Add(kateg);
+            var category = new Category { Name = categoryName };
+            context.Category.Add(category);
             context.SaveChanges();
-            kat.Items.Add(a);
-
+            CategorySelector.Items.Add(categoryName);
+            CategoryInput.Clear();
         }
 
-        private void Zap(object sender, RoutedEventArgs e)
+        private void AddUnit(object sender, RoutedEventArgs e)
         {
-            var b = new_ed.Text;
+            var unitName = UnitInput.Text;
+            if (string.IsNullOrWhiteSpace(unitName)) return;
+
             var context = new AppDbContext();
-            var ed_izm = new Unit { Name = b };
-            context.Unit.Add(ed_izm);
+            var unit = new Unit { Name = unitName };
+            context.Unit.Add(unit);
             context.SaveChanges();
-            ed_izmm.Items.Add(b);
+            UnitSelector.Items.Add(unitName);
+            UnitInput.Clear();
         }
 
-        private void Vvod(object sender, RoutedEventArgs e)
+        private void SaveProduct(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(ProductNameInput.Text) ||
+                string.IsNullOrWhiteSpace(PriceInput.Text) ||
+                string.IsNullOrWhiteSpace(QuantityInput.Text))
+                return;
 
-            var Product = tovar.Text;
-            var Price = price.Text;
-            var Kol = kol_vo.Text;
             var context = new AppDbContext();
-            var Edizm = context.Unit.Find(ed_izmm.SelectedIndex + 1);
-            var kateg = context.Category.Find(kat.SelectedIndex + 1);
-            var tovari = new Product { Name = Product, Unit = Edizm, Category = kateg, Price = Convert.ToInt32(Price), Amount = Convert.ToInt32(Kol) };
-            context.Product.Add(tovari);
+            var unit = context.Unit.Find(UnitSelector.SelectedIndex + 1);
+            var category = context.Category.Find(CategorySelector.SelectedIndex + 1);
+
+            var product = new Product
+            {
+                Name = ProductNameInput.Text,
+                Unit = unit,
+                Category = category,
+                Price = Convert.ToInt32(PriceInput.Text),
+                Amount = Convert.ToInt32(QuantityInput.Text)
+            };
+
+            context.Product.Add(product);
             context.SaveChanges();
+
+            ClearProductForm();
         }
 
-        private void Privoz(object sender, RoutedEventArgs e)
+        private void ClearProductForm()
         {
-            ProductEditor priv = new ProductEditor();
-            this.Hide();
-            priv.Show();
+            ProductNameInput.Clear();
+            QuantityInput.Clear();
+            PriceInput.Clear();
+            UnitSelector.SelectedIndex = -1;
+            CategorySelector.SelectedIndex = -1;
         }
 
-        private void Sale(object sender, RoutedEventArgs e)
+        private void ShowArrival(object sender, RoutedEventArgs e)
         {
-            SaleWindow prod = new SaleWindow();
+            var arrivalWindow = new ProductEditor();
             this.Hide();
-            prod.Show();
+            arrivalWindow.Show();
         }
 
-        private void Sklad(object sender, RoutedEventArgs e)
+        private void ShowSale(object sender, RoutedEventArgs e)
         {
-            ProductOverviewWindow sklad = new ProductOverviewWindow();
+            var saleWindow = new SaleWindow();
             this.Hide();
-            sklad.Show();
+            saleWindow.Show();
         }
 
-        private void Otchet(object sender, RoutedEventArgs e)
+        private void ShowStock(object sender, RoutedEventArgs e)
         {
-            AdminReportsWindow sklad = new AdminReportsWindow();
+            var stockWindow = new ProductOverviewWindow();
             this.Hide();
-            sklad.Show();
+            stockWindow.Show();
+        }
+
+        private void ShowReports(object sender, RoutedEventArgs e)
+        {
+            var reportsWindow = new AdminReportsWindow();
+            this.Hide();
+            reportsWindow.Show();
         }
     }
 }

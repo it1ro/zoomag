@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
         Title="ProductEditor" Height="450" Width="1000">
     <Grid>
@@ -18,17 +17,53 @@
             <ColumnDefinition></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <DataGrid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Grid.RowSpan="3" Name="dg" AutoGenerateColumns="False" ItemsSource="{Binding Test}" FontSize="24">
+        
+        <DataGrid Grid.Column="0" 
+                  Grid.ColumnSpan="2" 
+                  Grid.Row="0" 
+                  Grid.RowSpan="3" 
+                  x:Name="SupplyDataGrid" 
+                  AutoGenerateColumns="False" 
+                  ItemsSource="{Binding Test}" 
+                  FontSize="24">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="дата" Width="200" Binding="{Binding Path=data}"></DataGridTextColumn>
-                <DataGridTextColumn Header="наименование" Width="300" Binding="{Binding Path=naim}"></DataGridTextColumn>
-                <DataGridTextColumn Header="ед/изм" Width="200" Binding="{Binding Path=ed}"></DataGridTextColumn>
-                <DataGridTextColumn Header="кол__во" Width="100" Binding="{Binding Path=kol_vo}"></DataGridTextColumn>
-                <DataGridTextColumn Header="цена" Width="200" Binding="{Binding Path=cena}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Дата" 
+                                    Width="200" 
+                                    Binding="{Binding Path=Date, StringFormat=dd.MM.yyyy}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Наименование" 
+                                    Width="300" 
+                                    Binding="{Binding Path=Name}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Ед/изм" 
+                                    Width="200" 
+                                    Binding="{Binding Path=Unit}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Кол-во" 
+                                    Width="100" 
+                                    Binding="{Binding Path=Quantity}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Цена" 
+                                    Width="200" 
+                                    Binding="{Binding Path=Price}"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <Button Grid.Column="0" Grid.Row="3" Content="Ввод списком" FontSize="25" Click="Button_Click" ></Button>
-        <Button Grid.Column="1" Grid.Row="3"  Content="Запись в БД" FontSize="25" Click="Button_Click_1" ></Button>
-        <Button Grid.Row="2" Grid.Column="2" Content="Назад" FontSize="24" Grid.RowSpan="2" ></Button>
+        
+        <Button Grid.Column="0" 
+                Grid.Row="3" 
+                x:Name="ImportButton" 
+                Content="Ввод списком" 
+                FontSize="25" 
+                Click="ImportFromExcel"></Button>
+                
+        <Button Grid.Column="1" 
+                Grid.Row="3"  
+                x:Name="SaveButton" 
+                Content="Запись в БД" 
+                FontSize="25" 
+                Click="SaveToDatabase"></Button>
+                
+        <Button Grid.Row="2" 
+                Grid.Column="2" 
+                x:Name="BackButton" 
+                Content="Назад" 
+                FontSize="24" 
+                Grid.RowSpan="2"></Button>
     </Grid>
 </Window>

@@ -15,13 +15,20 @@
         </Grid.RowDefinitions>
 
         <!-- Заголовок -->
-        <TextBlock Grid.Row="0" Text="Supply Report Filter" 
-                   FontSize="24" FontWeight="Bold" 
-                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+        <TextBlock Grid.Row="0" 
+                   Text="Supply Report Filter" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,0,0,20"/>
 
         <!-- Панель фильтров -->
-        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,0,0,20">
-            <GroupBox Header="Filters" Padding="10" Margin="0,0,0,10">
+        <StackPanel Grid.Row="1" 
+                    Orientation="Vertical" 
+                    Margin="0,0,0,20">
+            <GroupBox Header="Filters" 
+                      Padding="10" 
+                      Margin="0,0,0,10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" MinWidth="120"/>
@@ -35,38 +42,60 @@
                     </Grid.RowDefinitions>
 
                     <!-- Категория -->
-                    <Label Grid.Row="0" Grid.Column="0" Content="Category:" 
+                    <Label Grid.Row="0" 
+                           Grid.Column="0" 
+                           Content="Category:" 
                            VerticalAlignment="Center"/>
-                    <ComboBox Name="cb" Grid.Row="0" Grid.Column="1" 
-                              Margin="5" VerticalAlignment="Center" 
-                              MinWidth="200" Height="30"/>
+                    <ComboBox x:Name="CategoryFilter" 
+                              Grid.Row="0" 
+                              Grid.Column="1" 
+                              Margin="5" 
+                              VerticalAlignment="Center" 
+                              MinWidth="200" 
+                              Height="30"/>
 
                     <!-- Первая буква названия -->
-                    <Label Grid.Row="0" Grid.Column="2" Content="First Letter:" 
-                           VerticalAlignment="Center" Margin="10,0,0,0"/>
-                    <TextBox Name="tbbuk" Grid.Row="0" Grid.Column="3" 
-                             Margin="5" VerticalAlignment="Center" 
-                             Width="100" Height="30" MaxLength="1" 
+                    <Label Grid.Row="0" 
+                           Grid.Column="2" 
+                           Content="First Letter:" 
+                           VerticalAlignment="Center" 
+                           Margin="10,0,0,0"/>
+                    <TextBox x:Name="FirstLetterFilter" 
+                             Grid.Row="0" 
+                             Grid.Column="3" 
+                             Margin="5" 
+                             VerticalAlignment="Center" 
+                             Width="100" 
+                             Height="30" 
+                             MaxLength="1" 
                              HorizontalAlignment="Left"/>
 
                     <!-- Дата -->
-                    <Label Grid.Row="1" Grid.Column="0" Content="Date:" 
-                           VerticalAlignment="Center" Margin="0,10,0,0"/>
-                    <DatePicker x:Name="DatePicker" Grid.Row="1" Grid.Column="1" 
-                              Margin="5,10,5,5" 
-                              HorizontalAlignment="Left" 
-                              FirstDayOfWeek="Monday"/>
+                    <Label Grid.Row="1" 
+                           Grid.Column="0" 
+                           Content="Date:" 
+                           VerticalAlignment="Center" 
+                           Margin="0,10,0,0"/>
+                    <DatePicker x:Name="DateFilter" 
+                                Grid.Row="1" 
+                                Grid.Column="1" 
+                                Margin="5,10,5,5" 
+                                HorizontalAlignment="Left" 
+                                FirstDayOfWeek="Monday"/>
 
                     <!-- Метка для календаря -->
-                    <Label Grid.Row="1" Grid.Column="2" Content="Select Date:" 
-                           VerticalAlignment="Top" Margin="10,10,0,0" 
+                    <Label Grid.Row="1" 
+                           Grid.Column="2" 
+                           Content="Select Date:" 
+                           VerticalAlignment="Top" 
+                           Margin="10,10,0,0" 
                            Grid.ColumnSpan="2"/>
                 </Grid>
             </GroupBox>
         </StackPanel>
 
         <!-- Таблица с результатами -->
-        <DataGrid x:Name="dg8" 
+        <DataGrid x:Name="SupplyReportGrid" 
                   Grid.Row="2"
                   AutoGenerateColumns="False" 
                   FontSize="14"
@@ -81,13 +110,13 @@
                                     Width="80" 
                                     SortDirection="Ascending"/>
                 <DataGridTextColumn Header="Date" 
-                                    Binding="{Binding Path=Data}" 
+                                    Binding="{Binding Path=Date}" 
                                     Width="150"/>
                 <DataGridTextColumn Header="Name" 
-                                    Binding="{Binding Path=Naim}" 
+                                    Binding="{Binding Path=Name}" 
                                     Width="*"/>
                 <DataGridTextColumn Header="Quantity" 
-                                    Binding="{Binding Path=Qty}" 
+                                    Binding="{Binding Path=Quantity}" 
                                     Width="100"/>
                 <DataGridTextColumn Header="Price" 
                                     Binding="{Binding Path=Price}" 
@@ -96,10 +125,11 @@
         </DataGrid>
 
         <!-- Кнопки управления -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" 
+        <StackPanel Grid.Row="3" 
+                    Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     Margin="0,10,0,0">
-            <Button x:Name="bt1" 
+            <Button x:Name="GenerateReportButton" 
                     Content="Generate Report" 
                     Background="LightBlue" 
                     FontSize="14"
@@ -108,7 +138,8 @@
                     Height="40" 
                     Width="150" />
             
-            <Button Content="Back" 
+            <Button x:Name="BackButton" 
+                    Content="Back" 
                     Background="LightGray" 
                     FontSize="14"
                     Padding="20,10"

@@ -1,41 +1,51 @@
 ﻿using System.Windows;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Zoomag.Data;
 
 namespace Zoomag.Views
 {
-    using Data;
-    using Microsoft.EntityFrameworkCore;
-
     /// <summary>
     /// Логика взаимодействия для ProductOverviewWindow.xaml
     /// </summary>
     public partial class ProductOverviewWindow : Window
     {
+        private readonly AppDbContext _context;
+
         public ProductOverviewWindow()
         {
             InitializeComponent();
-            var context = new AppDbContext();
-            dg3.ItemsSource = context.Product
-            .OrderBy(x => x.Name)
-            .ToList();
+            _context = new AppDbContext();
+            LoadProductNames();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void LoadProductNames()
         {
-            var context = new AppDbContext();
-            dg4.ItemsSource = context.Product
-                .Include(t => t.Unit)
-                .Include(t => t.Category)
-                .OrderByDescending(x => x.Amount)
+            ProductNameGrid.ItemsSource = _context.Product
+                .OrderBy(product => product.Name)
                 .ToList();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void LoadProductDetails(object sender, RoutedEventArgs e)
         {
-            AdminWindow main = new AdminWindow();
-            this.Hide();
-            main.Show();
+            ProductDetailsGrid.ItemsSource = _context.Product
+                .Include(product => product.Unit)
+                .Include(product => product.Category)
+                .OrderByDescending(product => product.Amount)
+                .ToList();
         }
 
+        private void GoToAdmin(object sender, RoutedEventArgs e)
+        {
+            var adminWindow = new AdminWindow();
+            this.Hide();
+            adminWindow.Show();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _context?.Dispose();
+            base.OnClosed(e);
+        }
     }
 }

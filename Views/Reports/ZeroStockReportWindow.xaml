@@ -12,17 +12,43 @@
             <RowDefinition Height="*" />     <!-- Для DataGrid -->
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
-            <Button x:Name="btnExport" Content="Выгрузить в Excel" FontSize="16" Padding="10,5" Margin="5" Click="btnExport_Click" />
-            <Button x:Name="btnBack" Content="Назад" FontSize="16" Padding="10,5" Margin="5" Click="btnBack_Click" />
+        <StackPanel Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    Margin="10">
+            <Button x:Name="ExportToExcelButton" 
+                    Content="Выгрузить в Excel" 
+                    FontSize="16" 
+                    Padding="10,5" 
+                    Margin="5" 
+                    Click="ExportToExcel"/>
+            <Button x:Name="BackButton" 
+                    Content="Назад" 
+                    FontSize="16" 
+                    Padding="10,5" 
+                    Margin="5" 
+                    Click="GoToAdminReports"/>
         </StackPanel>
 
-        <DataGrid x:Name="dgZeroStock" Grid.Row="1" Margin="10" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" FontSize="14">
+        <DataGrid x:Name="ZeroStockGrid" 
+                  Grid.Row="1" 
+                  Margin="10" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False" 
+                  IsReadOnly="True" 
+                  FontSize="14">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="300" />
-                <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="200" />
-                <DataGridTextColumn Header="Ед. изм." Binding="{Binding Unit}" Width="100" />
-                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="100" />
+                <DataGridTextColumn Header="Наименование" 
+                                    Binding="{Binding Name}" 
+                                    Width="300" />
+                <DataGridTextColumn Header="Категория" 
+                                    Binding="{Binding Category}" 
+                                    Width="200" />
+                <DataGridTextColumn Header="Ед. изм." 
+                                    Binding="{Binding Unit}" 
+                                    Width="100" />
+                <DataGridTextColumn Header="Цена" 
+                                    Binding="{Binding Price}" 
+                                    Width="100" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

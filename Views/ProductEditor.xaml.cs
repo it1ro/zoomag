@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using ClosedXML.Excel;
 using Zoomag.Data;
 using Zoomag.Models;
+using System.Linq;
 
 namespace Zoomag.Views
 {
@@ -13,83 +14,111 @@ namespace Zoomag.Views
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void ImportFromExcel(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "Файлы Excel|*.xlsx;*.xls;*.xlsm|Все файлы|*.*";
-            if (openDialog.ShowDialog() == true)
+            var openDialog = new OpenFileDialog
             {
-                using (var workbook = new XLWorkbook(openDialog.FileName))
+                Filter = "Файлы Excel|*.xlsx;*.xls;*.xlsm|Все файлы|*.*"
+            };
+
+            if (openDialog.ShowDialog() != true) return;
+
+            using var workbook = new XLWorkbook(openDialog.FileName);
+            var worksheet = workbook.Worksheets.Worksheet(1);
+            var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+
+            if (lastRow < 2)
+            {
+                MessageBox.Show("Файл не содержит данных для импорта.", "Информация",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            for (int row = 2; row <= lastRow; row++)
+            {
+                var name = ReadCell(worksheet, row, 1);
+                var unit = ReadCell(worksheet, row, 2);
+                var quantityStr = ReadCell(worksheet, row, 3);
+                var priceStr = ReadCell(worksheet, row, 4);
+
+                if (!int.TryParse(quantityStr, out int quantity) || !int.TryParse(priceStr, out int price))
                 {
-                    var ws = workbook.Worksheets.Worksheet(1);
-                    var lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
-
-                    for (int i = 2; i <= lastRow; i++)
-                    {
-                        string name = ws.Cell(i, 1).IsEmpty() ? "" : ws.Cell(i, 1).GetString();
-                        string unit = ws.Cell(i, 2).IsEmpty() ? "" : ws.Cell(i, 2).GetString();
-                        string amountStr = ws.Cell(i, 3).IsEmpty() ? "0" : ws.Cell(i, 3).GetString();
-                        string priceStr = ws.Cell(i, 4).IsEmpty() ? "0" : ws.Cell(i, 4).GetString();
-
-                        if (int.TryParse(amountStr, out int quantity) && int.TryParse(priceStr, out int price))
-                        {
-                            var item = new SupplyImportViewModel
-                            {
-                                Date = DateTime.Today,  // ✅ DateTime
-                                Name = name,
-                                Unit = unit,
-                                Quantity = quantity,
-                                Price = price
-                            };
-                            dg.Items.Add(item);
-                        }
-                        else
-                        {
-                            MessageBox.Show($"Неверный формат данных в строке {i}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
-                    }
+                    MessageBox.Show($"Неверный формат данных в строке {row}.", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    continue;
                 }
+
+                var supplyItem = new SupplyImportViewModel
+                {
+                    Date = DateTime.Today,
+                    Name = name,
+                    Unit = unit,
+                    Quantity = quantity,
+                    Price = price
+                };
+
+                SupplyDataGrid.Items.Add(supplyItem);
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private string ReadCell(IXLWorksheet worksheet, int row, int column)
         {
+            return worksheet.Cell(row, column).IsEmpty() ? string.Empty : worksheet.Cell(row, column).GetString();
+        }
+
+        private void SaveToDatabase(object sender, RoutedEventArgs e)
+        {
+            if (SupplyDataGrid.Items.Count == 0)
+            {
+                MessageBox.Show("Нет данных для сохранения.", "Информация",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
             using var context = new AppDbContext();
 
-            for (int i = 0; i < dg.Items.Count; i++)
+            for (int i = 0; i < SupplyDataGrid.Items.Count; i++)
             {
-                var item = dg.Items[i] as SupplyImportViewModel;
+                var item = SupplyDataGrid.Items[i] as SupplyImportViewModel;
+                if (item == null) continue;
 
                 // Создаём поставку
                 var supply = new Supply
                 {
-                    Date = item.Date,  // ✅ DateTime
-                    Name = $"Поставка {item.Name} от {item.Date:dd.MM.yyyy}",
+                    Date = item.Date,
+                    Name = $"Поставка {item.Name} от {item.Date:dd.MM.yyyy}"
                 };
 
                 context.Supply.Add(supply);
-                context.SaveChanges(); // Нужно, чтобы получить supply.Id
+                context.SaveChanges(); // Сохраняем, чтобы получить Id
 
-                var product = context.Product.Where(x => x.Name == item.Name).FirstOrDefault();
+                // Ищем существующий товар
+                var product = context.Product.FirstOrDefault(x => x.Name == item.Name);
 
                 if (product != null)
                 {
+                    // Обновляем существующий товар
                     product.Amount += item.Quantity;
-                    if (product.Price < item.Price) product.Price = item.Price;
+                    if (product.Price < item.Price)
+                        product.Price = item.Price;
                 }
                 else
                 {
+                    // Создаём новый товар
                     var unit = context.Unit.Find(1);
                     if (unit == null)
                     {
-                        MessageBox.Show("Единица измерения не найдена!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Единица измерения не найдена!", "Ошибка",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
-                    var category = context.Category.Find(item.Price < 100 ? 1 : 2);
+                    var categoryId = item.Price < 100 ? 1 : 2; // Логика определения категории
+                    var category = context.Category.Find(categoryId);
                     if (category == null)
                     {
-                        MessageBox.Show("Категория не найдена!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Категория с Id {categoryId} не найдена!", "Ошибка",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -101,8 +130,9 @@ namespace Zoomag.Views
                         Unit = unit,
                         Category = category
                     };
+
                     context.Product.Add(newProduct);
-                    context.SaveChanges(); // Чтобы получить Id
+                    context.SaveChanges(); // Сохраняем, чтобы получить Id
                     product = newProduct;
                 }
 
@@ -113,22 +143,21 @@ namespace Zoomag.Views
                     ProductId = product.Id,
                     Quantity = item.Quantity,
                     Price = item.Price
-                    // Total вычисляется автоматически
                 };
 
                 context.SupplyItem.Add(supplyItem);
-
-                // ✅ Обновляем общую сумму поставки
             }
 
-            context.SaveChanges(); // Сохраняем всё
+            context.SaveChanges();
+            MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         public class SupplyImportViewModel
         {
-            public DateTime Date { get; set; }  // ✅ DateTime
-            public string Name { get; set; }
-            public string Unit { get; set; }
+            public DateTime Date { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string Unit { get; set; } = string.Empty;
             public int Quantity { get; set; }
             public int Price { get; set; }
         }

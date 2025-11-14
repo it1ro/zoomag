@@ -17,12 +17,62 @@
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
-        <Button Grid.Column="0" Grid.Row="0" Content="Прайс-лист" FontSize="20" Click="price_list" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="0" Grid.Row="1" Content="Отчет по категориям" FontSize="20" Click="cat" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="0" Grid.Row="2" Content="Отчет по поступлению товаров за день"  FontSize="20" Click="post_day" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="1" Grid.Row="0" Content="Журнал поступления товаров" FontSize="20" Click="post_tov" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="1" Grid.Row="1" Content="Отчет по складу" FontSize="20" Click="otch_sklad" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="1" Grid.Row="2" Content="Нулевые позиции" FontSize="20" Click="null_poz" Margin="10,10,10,10"></Button>
-        <Button Grid.Column="0" Grid.Row="4" Content="Назад" FontSize="20" Click="nazad" Margin="10,10,10,10" Grid.ColumnSpan="2"></Button>
+        
+        <Button Grid.Column="0" 
+                Grid.Row="0" 
+                x:Name="PriceListButton" 
+                Content="Прайс-лист" 
+                FontSize="20" 
+                Click="GeneratePriceList" 
+                Margin="10,10,10,10"></Button>
+                
+        <Button Grid.Column="0" 
+                Grid.Row="1" 
+                x:Name="CategoryReportButton" 
+                Content="Отчет по категориям" 
+                FontSize="20" 
+                Click="ViewCategoryReport" 
+                Margin="10,10,10,10"></Button>
+                
+        <Button Grid.Column="0" 
+                Grid.Row="2" 
+                x:Name="DailyReceiptReportButton" 
+                Content="Отчет по поступлению товаров за день"  
+                FontSize="20" 
+                Click="ViewDailyReceiptReport" 
+                Margin="10,10,10,10"></Button>
+                
+        <Button Grid.Column="1" 
+                Grid.Row="0" 
+                x:Name="IncomingGoodsJournalButton" 
+                Content="Журнал поступления товаров" 
+                FontSize="20" 
+                Click="ViewIncomingGoodsJournal" 
+                Margin="10,10,10,10"></Button>
+                
+        <Button Grid.Column="1" 
+                Grid.Row="1" 
+                x:Name="StockReportButton" 
+                Content="Отчет по складу" 
+                FontSize="20" 
+                Click="GenerateStockReport" 
+                Margin="10,10,10,10"></Button>
+                
+        <Button Grid.Column="1" 
+                Grid.Row="2" 
+                x:Name="ZeroStockButton" 
+                Content="Нулевые позиции" 
+                FontSize="20" 
+                Click="ViewZeroStockReport" 
+                Margin="10,10,10,10"></Button>
+                
+        <Button Grid.Column="0" 
+                Grid.Row="4" 
+                x:Name="BackButton" 
+                Content="Назад" 
+                FontSize="20" 
+                Click="GoToAdmin" 
+                Margin="10,10,10,10" 
+                Grid.ColumnSpan="2"></Button>
     </Grid>
 </Window>

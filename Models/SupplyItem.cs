@@ -5,6 +5,7 @@ namespace Zoomag.Models
 {
     public class SupplyItem
     {
+        public int Id { get; set; }
         public int SupplyId { get; set; }
         public int ProductId { get; set; }
 

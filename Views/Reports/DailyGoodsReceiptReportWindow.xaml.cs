@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Zoomag.Data;
+using System.Linq;
 
 namespace Zoomag.Views.Reports
 {
@@ -15,19 +16,19 @@ namespace Zoomag.Views.Reports
 
         private void LoadData()
         {
-            var selecteDeliverydDate = DeliveryDatePicker.SelectedDate;
-            if (!selecteDeliverydDate.HasValue)
+            var selectedDate = DeliveryDatePicker.SelectedDate;
+            if (!selectedDate.HasValue)
                 return;
 
-            DateTime date = selecteDeliverydDate.Value.Date;
+            DateTime date = selectedDate.Value.Date;
 
             try
             {
                 using var context = new AppDbContext();
                 var supplyItems = context.SupplyItem
-                    .Include(si => si.Supply)  // Загрузить поставку
-                    .Include(si => si.Product) // Загрузить товар
-                    .Where(si => si.Supply.Date != null && selecteDeliverydDate == date)
+                    .Include(si => si.Supply)
+                    .Include(si => si.Product)
+                    .Where(si => si.Supply.Date != null && si.Supply.Date == date)
                     .ToList();
 
                 var reportItems = supplyItems
@@ -43,9 +44,9 @@ namespace Zoomag.Views.Reports
                 int totalSum = reportItems.Sum(r => r.Total);
                 int totalQuantity = reportItems.Sum(r => r.Amount);
 
-                sum.Text = totalSum.ToString();
-                kol_tov.Text = totalQuantity.ToString();
-                dataGrid.ItemsSource = reportItems;
+                TotalAmountDisplay.Text = totalSum.ToString();
+                TotalQuantityDisplay.Text = totalQuantity.ToString();
+                ReportDataGrid.ItemsSource = reportItems;
             }
             catch (Exception ex)
             {
@@ -54,27 +55,27 @@ namespace Zoomag.Views.Reports
             }
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        private void GenerateReport(object sender, RoutedEventArgs e)
         {
             LoadData();
         }
 
-        private void ResetFilter_Click(object sender, RoutedEventArgs e)
+        private void ResetFilter(object sender, RoutedEventArgs e)
         {
             DeliveryDatePicker.SelectedDate = DateTime.Today;
             LoadData();
         }
 
-        private void BackButton_Click(object sender, RoutedEventArgs e)
+        private void BackToMainMenu(object sender, RoutedEventArgs e)
         {
-            AdminWindow main = new AdminWindow();
+            var adminWindow = new AdminWindow();
             this.Hide();
-            main.Show();
+            adminWindow.Show();
         }
 
-        private void NextWindowButton_Click(object sender, RoutedEventArgs e)
+        private void NextToSalesReport(object sender, RoutedEventArgs e)
         {
-            SupplyReportWindow nextWindow = new SupplyReportWindow();
+            var nextWindow = new SupplyReportWindow();
             this.Hide();
             nextWindow.Show();
         }

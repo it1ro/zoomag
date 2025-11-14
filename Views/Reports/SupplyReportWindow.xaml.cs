@@ -1,6 +1,7 @@
 ﻿using System.Windows;
-using Microsoft.EntityFrameworkCore;
+using System.Windows.Controls;
 using Zoomag.Data;
+using System.Linq;
 
 namespace Zoomag.Views.Reports
 {
@@ -15,101 +16,68 @@ namespace Zoomag.Views.Reports
         private void LoadCategories()
         {
             using var context = new AppDbContext();
-            var categories = context.Category.ToList();
-            foreach (var category in categories)
+            foreach (var category in context.Category.ToList())
             {
-                cb.Items.Add(category.Name);
+                CategoryFilter.Items.Add(category.Name);
             }
         }
 
-        private void BackButton_Click(object sender, RoutedEventArgs e)
+        private void GenerateReport(object sender, RoutedEventArgs e)
         {
-            this.Hide();
-            var previousWindow = new DailyGoodsReceiptReportWindow();
-            previousWindow.Show();
-        }
+            var context = new AppDbContext();
 
-        private void GenerateReportButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
+            var query = context.SupplyItem
+                .AsQueryable();
+
+            // Фильтр по категории
+            if (CategoryFilter.SelectedItem != null)
             {
-                var selectedDate = GetSelectedDate();
-                if (!selectedDate.HasValue)
-                {
-                    MessageBox.Show("Please select a date.", "Date Required", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var selectedCategory = cb.Text;
-                var firstLetter = tbbuk.Text?.Trim();
-
-                if (string.IsNullOrEmpty(selectedCategory))
-                {
-                    MessageBox.Show("Please select a category.", "Category Required", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(firstLetter))
-                {
-                    MessageBox.Show("Please enter the first letter of product name.", "Name Letter Required", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var reportData = GetSupplyReport(selectedDate.Value, selectedCategory, firstLetter);
-                dg8.ItemsSource = reportData;
+                var selectedCategory = CategoryFilter.SelectedItem.ToString();
+                query = query.Where(si => si.Product.Category.Name == selectedCategory);
             }
-            catch (Exception ex)
+
+            // Фильтр по первой букве названия
+            if (!string.IsNullOrWhiteSpace(FirstLetterFilter.Text))
             {
-                MessageBox.Show($"Error generating report: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                var firstLetter = FirstLetterFilter.Text.Trim().ToLower();
+                query = query.Where(si => si.Product.Name.ToLower().StartsWith(firstLetter));
             }
-        }
 
-        private DateTime? GetSelectedDate()
-        {
-            if (DatePicker.SelectedDate != null)  // ✅ Правильное имя
+            // Фильтр по дате
+            if (DateFilter.SelectedDate != null)
             {
-                return DatePicker.SelectedDate.Value.Date;
+                var selectedDate = DateFilter.SelectedDate.Value.Date;
+                query = query.Where(si => si.Supply.Date.Date == selectedDate);
             }
-            return null;
-        }
 
-        private List<SupplyReportItem> GetSupplyReport(DateTime date, string category, string nameStartsWith)
-        {
-            using var context = new AppDbContext();
-
-            var reportData = context.SupplyItem
-                .Include(si => si.Supply)
-                .Include(si => si.Product)
-                .ThenInclude(p => p.Category)
-                .Where(si => si.Supply.Date == date &&  // ✅ SupplyDate
-                             si.Product.Category.Name == category &&
-                             si.Product.Name.StartsWith(nameStartsWith, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(si => si.Product.Amount)
+            var reportData = query
                 .Select(si => new SupplyReportItem
                 {
-                    Id = si.SupplyId,
-                    Data = si.Supply.Date,  // ✅ SupplyDate
-                    Naim = si.Product.Name,
-                    Amount = si.Quantity,
+                    Id = si.Id,
+                    Date = si.Supply.Date,
+                    Name = si.Product.Name,
+                    Quantity = si.Quantity,
                     Price = si.Price
                 })
                 .ToList();
 
-            return reportData;
+            SupplyReportGrid.ItemsSource = reportData;
         }
 
-        private class SupplyReportItem
+        private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            public int Id { get; set; }
-            public DateTime Data { get; set; }  // ✅ DateTime, не string
-            public string Naim { get; set; }
-            public int Amount { get; set; }
-            public int Price { get; set; }
+            var adminWindow = new AdminWindow();
+            this.Hide();
+            adminWindow.Show();
         }
+    }
 
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-        }
+    public class SupplyReportItem
+    {
+        public int Id { get; set; }
+        public DateTime Date { get; set; }
+        public string Name { get; set; }
+        public int Quantity { get; set; }
+        public int Price { get; set; }
     }
 }
