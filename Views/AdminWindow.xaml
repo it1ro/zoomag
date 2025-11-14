@@ -5,48 +5,82 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
-        Title="AdminWindow" Height="450" Width="800">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-        </Grid.RowDefinitions>
-        <TextBlock Text="Новая категория"     FontSize="25" Grid.ColumnSpan="2"                    Grid.Row="0"></TextBlock>
-        <TextBlock Text="Новая ед/изм"       FontSize="25" Grid.ColumnSpan="2"                    Grid.Row="2"></TextBlock>
-        <TextBlock Text="Товар"              FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="4"></TextBlock>
-        <TextBlock Text="ед/изм"             FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="6" Grid.Column="0"></TextBlock>
-        <TextBlock Text="стоимость"          FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="7" Grid.Column="0"></TextBlock>
-        <TextBlock Text="категория"          FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="8" Grid.Column="0"></TextBlock>
-        <TextBlock Text="Кол_во"             FontSize="25" Grid.ColumnSpan="1"                    Grid.Row="5" Grid.Column="0"></TextBlock>
-        <TextBox   x:Name="kol_vo"           FontSize="15" Grid.ColumnSpan="1" Margin="10,10,10,10" Grid.Row="5" Grid.Column="1"></TextBox>
-        <TextBox   x:Name="new_kat"          FontSize="15" Grid.ColumnSpan="2" Margin="10,10,10,10" Grid.Row="1" Grid.Column="1"></TextBox>
-        <TextBox   x:Name="new_ed"           FontSize="15" Grid.ColumnSpan="2" Margin="10,10,10,10" Grid.Row="3" Grid.Column="1"></TextBox>
-        <TextBox   x:Name="tovar"            FontSize="15" Grid.ColumnSpan="1" Margin="10,10,10,10" Grid.Row="4" Grid.Column="1"></TextBox>
-        <TextBox   x:Name="price"            FontSize="15" Grid.ColumnSpan="1" Margin="10,10,10,10" Grid.Row="7" Grid.Column="1"></TextBox>
-        <Button    Content="добавление категории" FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="0" Grid.Column="4" Click="Dob_kat"></Button>
-        <Button    Content="заполнение ед/изм"    FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="1" Grid.Column="4" Click="Zap"></Button>
-        <Button    Content="ввод товаров"         FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="2" Grid.Column="4" Click="Vvod"></Button>
-        <Button    Content="Привоз"              FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="3" Grid.Column="4" Click="Privoz"></Button>
-        <Button    Content="Продажа"             FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="4" Grid.Column="4" Click="Sale"></Button>
-        <Button    Content="Склад"               FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="5" Grid.Column="4" Click="Sklad"></Button>
-        <Button    Content="Отчеты"              FontSize="20" Grid.ColumnSpan="5" Margin="10,10,10,10" Grid.Row="5" Grid.Column="4" Click="Otchet"></Button>
-        <ComboBox  Name="ed_izmm"                                       Grid.ColumnSpan="1"                Grid.Row="6" Grid.Column="1"></ComboBox>
-        <ComboBox  Name="kat"                                           Grid.ColumnSpan="1"                Grid.Row="8" Grid.Column="1"></ComboBox>
-    </Grid>
+        Title="AdminWindow" Height="500" Width="700">
+    
+    <ScrollViewer>
+        <StackPanel Margin="15">
+            
+            <!-- Группа: Управление справочниками -->
+            <GroupBox Header="Справочники" Margin="5" Padding="10">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Новая категория:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="new_kat" Grid.Row="0" Grid.Column="1" Margin="5" FontSize="12"/>
+                        <Button Content="Добавить" Grid.Row="0" Grid.Column="2" Margin="5" Padding="10,3" Click="Dob_kat"/>
+
+                        <TextBlock Text="Новая ед/изм:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="new_ed" Grid.Row="1" Grid.Column="1" Margin="5" FontSize="12"/>
+                        <Button Content="Добавить" Grid.Row="1" Grid.Column="2" Margin="5" Padding="10,3" Click="Zap"/>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Группа: Ввод товара -->
+            <GroupBox Header="Добавление товара" Margin="5" Padding="10">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Товар:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="tovar" Grid.Row="0" Grid.Column="1" Margin="5" FontSize="12"/>
+
+                        <TextBlock Text="Количество:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="kol_vo" Grid.Row="1" Grid.Column="1" Margin="5" FontSize="12"/>
+
+                        <TextBlock Text="Единица измерения:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                        <ComboBox Name="ed_izmm" Grid.Row="2" Grid.Column="1" Margin="5" FontSize="12"/>
+
+                        <TextBlock Text="Стоимость:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="price" Grid.Row="3" Grid.Column="1" Margin="5" FontSize="12"/>
+
+                        <TextBlock Text="Категория:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                        <ComboBox Name="kat" Grid.Row="4" Grid.Column="1" Margin="5" FontSize="12"/>
+                    </Grid>
+
+                    <Button Content="Сохранить товар" Margin="0,10,0,0" Padding="15,5" Click="Vvod"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Группа: Основные действия -->
+            <GroupBox Header="Основные действия" Margin="5" Padding="10">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Content="Привоз" Margin="0,0,10,0" Padding="15,5" Click="Privoz"/>
+                    <Button Content="Продажа" Margin="0,0,10,0" Padding="15,5" Click="Sale"/>
+                    <Button Content="Склад" Margin="0,0,10,0" Padding="15,5" Click="Sklad"/>
+                    <Button Content="Отчеты" Margin="0,0,10,0" Padding="15,5" Click="Otchet"/>
+                </StackPanel>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
 </Window>
