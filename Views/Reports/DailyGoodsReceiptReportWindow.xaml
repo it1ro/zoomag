@@ -170,12 +170,6 @@
                     Margin="0,0,10,0"
                     Background="#6c757d" 
                     Foreground="White"/>
-            <Button x:Name="NextToSalesReportButton"
-                    Content="Далее → Отчет по продажам" 
-                    Click="NextToSalesReport"
-                    Padding="15,5" 
-                    Background="#28a745" 
-                    Foreground="White"/>
         </StackPanel>
     </Grid>
 </Window>

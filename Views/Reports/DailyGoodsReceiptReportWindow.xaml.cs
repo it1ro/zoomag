@@ -72,13 +72,6 @@ namespace Zoomag.Views.Reports
             this.Hide();
             adminWindow.Show();
         }
-
-        private void NextToSalesReport(object sender, RoutedEventArgs e)
-        {
-            var nextWindow = new SupplyReportWindow();
-            this.Hide();
-            nextWindow.Show();
-        }
     }
 
     public class ReportItem
