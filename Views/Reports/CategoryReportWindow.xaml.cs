@@ -4,6 +4,9 @@ using ClosedXML.Excel;
 using Zoomag.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+// Добавлено для SaveFileDialog
+using Microsoft.Win32;
+using System.IO;
 
 namespace Zoomag.Views.Reports
 {
@@ -35,6 +38,31 @@ namespace Zoomag.Views.Reports
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            // --- Новый код для выбора места сохранения ---
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files (.xlsx)|*.xlsx|All Files (*.*)|*.*", // Фильтр типов файлов
+                // Используем выбранную категорию в имени файла
+                FileName = $"Отчет по категории {CategorySelector.SelectedItem.ToString()} {DateTime.Now:yyyy-MM-dd}.xlsx",
+                DefaultExt = ".xlsx", // Расширение по умолчанию
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) // Начальная папка
+            };
+
+            bool? result = saveFileDialog.ShowDialog(); // Показываем диалог
+
+            if (result != true) // Проверяем, подтвердил ли пользователь
+            {
+                return; // Выходим из метода, если отменено
+            }
+
+            string fileName = saveFileDialog.FileName; // Получаем выбранный путь
+
+            if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName += ".xlsx"; // Добавляем .xlsx, если пользователь не указал
+            }
+            // --- Конец нового кода ---
 
             using var context = new AppDbContext();
             var selectedCategory = CategorySelector.SelectedItem.ToString();
@@ -76,8 +104,18 @@ namespace Zoomag.Views.Reports
 
             worksheet.Cell(productCount + 5, 1).Value = $"{productCount} товаров";
 
-            string fileName = $@"C:\Users\student\Desktop\Журнал категории {DateTime.Today:MMMM d,yyyy}.xlsx";
-            workbook.SaveAs(fileName);
+            // Сохраняем в выбранный пользователем файл
+            try
+            {
+                workbook.SaveAs(fileName);
+                MessageBox.Show($"Файл сохранён: {fileName}", "Успех",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении файла: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void GoToAdmin(object sender, RoutedEventArgs e)

@@ -123,8 +123,7 @@ namespace Zoomag.Views.Reports
 
             worksheet.Column(1).Style.NumberFormat.SetFormat("dd/MM/yyyy");
             worksheet.Column(3).Style.NumberFormat.SetFormat("#,##0.00");
-            worksheet.Column(4).Style.NumberFormat.SetFormat("#,##0.00 [$€-419]");
-            worksheet.Column(5).Style.NumberFormat.SetFormat("#,##0.00 [$€-419]");
+
 
             worksheet.Columns().AdjustToContents();
 

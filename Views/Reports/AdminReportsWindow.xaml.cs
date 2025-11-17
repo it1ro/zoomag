@@ -129,48 +129,52 @@ namespace Zoomag.Views.Reports
 
         private void ViewCategoryReport(object sender, RoutedEventArgs e)
         {
-            using var context = new AppDbContext();
-            var reportData = context.Product
-                .GroupJoin(context.Category,
-                    p => p.Category.Id,
-                    c => c.Id,
-                    (p, c) => new { Product = p, Categories = c })
-                .SelectMany(x => x.Categories.DefaultIfEmpty(),
-                    (x, c) => new { x.Product, Category = c })
-                .GroupBy(pc => pc.Category.Name)
-                .Select(g => new { CategoryName = g.Key, Count = g.Count(), TotalValue = g.Sum(pc => pc.Product.Price * pc.Product.Amount) })
-                .ToList();
+            // using var context = new AppDbContext();
+            // var reportData = context.Product
+            //     .GroupJoin(context.Category,
+            //         p => p.Category.Id,
+            //         c => c.Id,
+            //         (p, c) => new { Product = p, Categories = c })
+            //     .SelectMany(x => x.Categories.DefaultIfEmpty(),
+            //         (x, c) => new { x.Product, Category = c })
+            //     .GroupBy(pc => pc.Category.Name)
+            //     .Select(g => new { CategoryName = g.Key, Count = g.Count(), TotalValue = g.Sum(pc => pc.Product.Price * pc.Product.Amount) })
+            //     .ToList();
+            //
+            // using var workbook = new XLWorkbook();
+            // var worksheet = workbook.Worksheets.Add("Отчет по категориям");
+            //
+            // worksheet.Cell(1, 1).Value = "Отчет по категориям на";
+            // worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM dd yyyy");
+            //
+            // worksheet.Cell(3, 1).Value = "Категория";
+            // worksheet.Cell(3, 3).Value = "Количество товаров";
+            // worksheet.Cell(3, 5).Value = "Общая стоимость";
+            //
+            // int row = 4;
+            // foreach (var item in reportData)
+            // {
+            //     worksheet.Cell(row, 1).Value = item.CategoryName;
+            //     worksheet.Cell(row, 3).Value = item.Count;
+            //     worksheet.Cell(row, 5).Value = item.TotalValue;
+            //     row++;
+            // }
+            //
+            // try
+            // {
+            //     string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            //     string fileName = Path.Combine(desktopPath, $"Отчет по категориям на {DateTime.Today:MMMM dd yyyy}.xlsx");
+            //     workbook.SaveAs(fileName);
+            //     MessageBox.Show($"Отчет сохранен: {fileName}");
+            // }
+            // catch (System.Exception ex)
+            // {
+            //     MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}");
+            // }
 
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Отчет по категориям");
-
-            worksheet.Cell(1, 1).Value = "Отчет по категориям на";
-            worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM dd yyyy");
-
-            worksheet.Cell(3, 1).Value = "Категория";
-            worksheet.Cell(3, 3).Value = "Количество товаров";
-            worksheet.Cell(3, 5).Value = "Общая стоимость";
-
-            int row = 4;
-            foreach (var item in reportData)
-            {
-                worksheet.Cell(row, 1).Value = item.CategoryName;
-                worksheet.Cell(row, 3).Value = item.Count;
-                worksheet.Cell(row, 5).Value = item.TotalValue;
-                row++;
-            }
-
-            try
-            {
-                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string fileName = Path.Combine(desktopPath, $"Отчет по категориям на {DateTime.Today:MMMM dd yyyy}.xlsx");
-                workbook.SaveAs(fileName);
-                MessageBox.Show($"Отчет сохранен: {fileName}");
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}");
-            }
+            var categoryReportWindow = new CategoryReportWindow();
+            this.Hide(); // Скрываем текущее окно
+            categoryReportWindow.Show(); // Показываем новое окно
         }
 
         private void ViewZeroStockReport(object sender, RoutedEventArgs e)
