@@ -175,42 +175,10 @@ namespace Zoomag.Views.Reports
 
         private void ViewZeroStockReport(object sender, RoutedEventArgs e)
         {
-            using var context = new AppDbContext();
-            var products = context.Product
-                .Where(product => product.Amount == 0)
-                .Select(product => new { product.Name, product.Price })
-                .ToList();
-
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Товары с нулевым остатком");
-
-            worksheet.Cell(1, 1).Value = "Товары с нулевым остатком";
-            worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM dd yyyy");
-
-            worksheet.Cell(3, 1).Value = "Наименование";
-            worksheet.Cell(3, 3).Value = "Цена";
-
-            int row = 4;
-            foreach (var product in products)
-            {
-                worksheet.Cell(row, 1).Value = product.Name;
-                worksheet.Cell(row, 3).Value = product.Price;
-                row++;
-            }
-
-            worksheet.Cell(products.Count + 2, 1).Value = $"{products.Count} товаров";
-
-            try
-            {
-                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string fileName = Path.Combine(desktopPath, $"Товары с нулевым остатком на {DateTime.Today:MMMM dd yyyy}.xlsx");
-                workbook.SaveAs(fileName);
-                MessageBox.Show($"Отчет сохранен: {fileName}");
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}");
-            }
+            // Открываем новое окно вместо автоматической выгрузки
+            var zeroStockWindow = new ZeroStockReportWindow();
+            this.Hide(); // Скрываем текущее окно
+            zeroStockWindow.Show(); // Показываем новое окно
         }
     }
 }

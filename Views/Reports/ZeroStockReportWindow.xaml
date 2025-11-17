@@ -1,55 +1,32 @@
 <Window x:Class="Zoomag.Views.Reports.ZeroStockReportWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Zoomag"
-        mc:Ignorable="d"
-        Title="Нулевые позиции" Height="600" Width="1000">
+        Title="Товары с нулевым остатком" Height="600" Width="800">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Для кнопок -->
-            <RowDefinition Height="*" />     <!-- Для DataGrid -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" 
-                    Orientation="Horizontal" 
-                    Margin="10">
-            <Button x:Name="ExportToExcelButton" 
-                    Content="Выгрузить в Excel" 
-                    FontSize="16" 
-                    Padding="10,5" 
-                    Margin="5" 
-                    Click="ExportToExcel"/>
-            <Button x:Name="BackButton" 
-                    Content="Назад" 
-                    FontSize="16" 
-                    Padding="10,5" 
-                    Margin="5" 
-                    Click="GoToAdminReports"/>
-        </StackPanel>
+        <TextBlock Grid.Row="0" Text="Товары с нулевым остатком" 
+                   FontSize="18" FontWeight="Bold" Margin="10,10,10,10" HorizontalAlignment="Center"/>
 
-        <DataGrid x:Name="ZeroStockGrid" 
-                  Grid.Row="1" 
-                  Margin="10" 
+        <DataGrid Grid.Row="1" Name="ZeroStockDataGrid" 
                   AutoGenerateColumns="False" 
-                  CanUserAddRows="False" 
-                  IsReadOnly="True" 
-                  FontSize="14">
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  Margin="10,0,10,10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" 
-                                    Binding="{Binding Name}" 
-                                    Width="300" />
-                <DataGridTextColumn Header="Категория" 
-                                    Binding="{Binding Category}" 
-                                    Width="200" />
-                <DataGridTextColumn Header="Ед. изм." 
-                                    Binding="{Binding Unit}" 
-                                    Width="100" />
-                <DataGridTextColumn Header="Цена" 
-                                    Binding="{Binding Price}" 
-                                    Width="100" />
+                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="100"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Name="ExportToExcelButton" Content="Выгрузить в Excel" Width="120" Height="30" Margin="5" Click="ExportToExcel_Click"/>
+            <Button Name="BackToReportsButton" Content="Назад к отчетам" Width="120" Height="30" Margin="5" Click="BackToReports_Click"/>
+        </StackPanel>
     </Grid>
 </Window>

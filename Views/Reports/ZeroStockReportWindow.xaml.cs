@@ -1,15 +1,23 @@
-using System.Windows;
-using Zoomag.Data;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using System.Windows;
+using Microsoft.Win32; // Добавлено для SaveFileDialog
+using Zoomag.Data;
+using Zoomag.Models;
 
 namespace Zoomag.Views.Reports
 {
+    using ClosedXML.Excel;
+
     /// <summary>
     /// Логика взаимодействия для ZeroStockReportWindow.xaml
     /// </summary>
     public partial class ZeroStockReportWindow : Window
     {
+        private List<ProductViewModel> _zeroStockProducts;
+
         public ZeroStockReportWindow()
         {
             InitializeComponent();
@@ -18,54 +26,78 @@ namespace Zoomag.Views.Reports
 
         private void LoadZeroStockData()
         {
-            try
+            using var context = new AppDbContext();
+            _zeroStockProducts = context.Product
+                .Where(product => product.Amount == 0)
+                .Select(product => new ProductViewModel
+                {
+                    Name = product.Name,
+                    Price = product.Price
+                })
+                .ToList();
+
+            ZeroStockDataGrid.ItemsSource = _zeroStockProducts;
+        }
+
+        private void ExportToExcel_Click(object sender, RoutedEventArgs e)
+        {
+            // Создаем диалог сохранения файла
+            var saveFileDialog = new SaveFileDialog
             {
-                using var context = new AppDbContext();
-                var zeroStockItems = context.Product
-                    .Include(product => product.Category)
-                    .Include(product => product.Unit)
-                    .Where(product => product.Amount == 0)
-                    .Select(product => new
+                Filter = "Excel файлы (*.xlsx)|*.xlsx|Все файлы (*.*)|*.*",
+                FileName = $"Товары с нулевым остатком на {DateTime.Today:yyyy-MM-dd}.xlsx", // Предлагаемое имя файла
+                DefaultExt = ".xlsx",
+                Title = "Сохранить отчет в Excel"
+            };
+
+            // Показываем диалог и проверяем, нажал ли пользователь "Сохранить"
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    using var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add("Товары с нулевым остатком");
+
+                    worksheet.Cell(1, 1).Value = "Товары с нулевым остатком";
+                    worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM dd yyyy");
+
+                    worksheet.Cell(3, 1).Value = "Наименование";
+                    worksheet.Cell(3, 3).Value = "Цена";
+
+                    int row = 4;
+                    foreach (var product in _zeroStockProducts)
                     {
-                        Name = product.Name,
-                        Category = product.Category != null ? product.Category.Name : "Без категории",
-                        Unit = product.Unit != null ? product.Unit.Name : "Без ед.изм.",
-                        Price = product.Price
-                    })
-                    .ToList();
+                        worksheet.Cell(row, 1).Value = product.Name;
+                        worksheet.Cell(row, 3).Value = product.Price;
+                        row++;
+                    }
 
-                ZeroStockGrid.ItemsSource = zeroStockItems;
+                    worksheet.Cell(_zeroStockProducts.Count + 2, 1).Value = $"{_zeroStockProducts.Count} товаров";
+
+                    // Сохраняем файл по выбранному пользователем пути
+                    workbook.SaveAs(saveFileDialog.FileName);
+                    MessageBox.Show($"Отчет сохранен: {saveFileDialog.FileName}");
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при загрузке данных: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            // Если пользователь нажал "Отмена", ничего не делаем
         }
 
-        private void ExportToExcel(object sender, RoutedEventArgs e)
+        private void BackToReports_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                using var context = new AppDbContext();
-                var generator = new Services.ZeroStockReportGenerator(context);
-                string filePath = generator.GenerateReport();
-
-                MessageBox.Show($"Отчёт сгенерирован:\n{filePath}",
-                    "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при генерации отчёта:\n{ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void GoToAdminReports(object sender, RoutedEventArgs e)
-        {
-            var adminReportsWindow = new AdminReportsWindow();
+            var reportsWindow = new AdminReportsWindow();
             this.Hide();
-            adminReportsWindow.Show();
+            reportsWindow.Show();
+        }
+
+        // Вспомогательный класс для отображения данных в DataGrid
+        public class ProductViewModel
+        {
+            public string Name { get; set; }
+            public int Price { get; set; }
         }
     }
 }
