@@ -5,6 +5,8 @@ using Zoomag.Data;
 using System.Linq;
 using System;
 using Zoomag.Models;
+// Добавлено для SaveFileDialog
+using Microsoft.Win32;
 
 namespace Zoomag.Views.Reports
 {
@@ -21,32 +23,27 @@ namespace Zoomag.Views.Reports
         private void LoadSupplies()
         {
             using var context = new AppDbContext();
-            // Загружаем поставки и их элементы (SupplyItem), включая продукты
             var supplies = context.Supply
                 .Include(s => s.SupplyItems)
                     .ThenInclude(si => si.Product)
-                .OrderBy(s => s.Date) // Сортировка по дате, как более логичная для журнала
+                .OrderBy(s => s.Date)
                 .ToList();
 
-            // Преобразуем в список анонимных объектов или создайте ViewModel для отображения
-            // В данном случае, создадим временный список для DataGrid
             var displayList = supplies.SelectMany(s => s.SupplyItems.Select(si => new
             {
                 SupplyDate = s.Date,
                 ProductName = si.Product.Name,
                 Quantity = si.Quantity,
-                Price = si.Price, // Цена из SupplyItem
-                Total = si.Quantity * si.Price // Вычисляем общую сумму
+                Price = si.Price,
+                Total = si.Quantity * si.Price
             })).ToList();
 
             GoodsReceiptsGrid.ItemsSource = displayList;
         }
 
-
         private void ExportToExcel(object sender, RoutedEventArgs e)
         {
             using var context = new AppDbContext();
-            // Загружаем данные, аналогично LoadSupplies
             var supplies = context.Supply
                 .Include(s => s.SupplyItems)
                     .ThenInclude(si => si.Product)
@@ -69,20 +66,49 @@ namespace Zoomag.Views.Reports
                 return;
             }
 
+            // --- Новый код для выбора места сохранения ---
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files (.xlsx)|*.xlsx|All Files (*.*)|*.*", // Фильтр для типов файлов
+                FileName = $"Журнал поступления товаров {DateTime.Now:yyyy-MM-dd}.xlsx", // Предлагаемое имя файла
+                DefaultExt = ".xlsx", // Расширение по умолчанию
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) // Начальная папка - рабочий стол
+            };
+
+            // Показываем диалоговое окно
+            bool? result = saveFileDialog.ShowDialog();
+
+            // Проверяем, выбрал ли пользователь файл для сохранения
+            if (result != true)
+            {
+                // Пользователь отменил операцию
+                return;
+            }
+
+            string fileName = saveFileDialog.FileName; // Получаем выбранный путь к файлу
+
+            // Проверка, чтобы пользователь действительно выбрал .xlsx
+            if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                // Если пользователь не указал .xlsx, добавляем его
+                fileName += ".xlsx";
+            }
+
+            // --- Конец нового кода ---
+
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Журнал поступления товаров");
 
             worksheet.Cell(1, 1).Value = "Журнал поступления товаров на";
             worksheet.Cell(1, 3).Value = DateTime.Now.ToString("MMMM d, yyyy");
 
-            // Заголовки столбцов
             worksheet.Cell(3, 1).Value = "Дата";
             worksheet.Cell(3, 2).Value = "Наименование";
             worksheet.Cell(3, 3).Value = "Количество";
             worksheet.Cell(3, 4).Value = "Цена";
             worksheet.Cell(3, 5).Value = "Общая сумма";
 
-            worksheet.Range(3, 1, 3, 5).Style.Font.Bold = true; // Жирный шрифт для заголовков
+            worksheet.Range(3, 1, 3, 5).Style.Font.Bold = true;
 
             int row = 4;
             foreach (var item in exportData)
@@ -95,18 +121,12 @@ namespace Zoomag.Views.Reports
                 row++;
             }
 
-            // Форматирование столбцов
-            worksheet.Column(1).Style.NumberFormat.SetFormat("dd/MM/yyyy"); // Формат даты
-            worksheet.Column(3).Style.NumberFormat.SetFormat("#,##0.00"); // Формат для количества
-            worksheet.Column(4).Style.NumberFormat.SetFormat("#,##0.00 [$€-419]"); // Пример формата валюты (евро, русская локализация)
-            worksheet.Column(5).Style.NumberFormat.SetFormat("#,##0.00 [$€-419]"); // Формат для общей суммы
+            worksheet.Column(1).Style.NumberFormat.SetFormat("dd/MM/yyyy");
+            worksheet.Column(3).Style.NumberFormat.SetFormat("#,##0.00");
+            worksheet.Column(4).Style.NumberFormat.SetFormat("#,##0.00 [$€-419]");
+            worksheet.Column(5).Style.NumberFormat.SetFormat("#,##0.00 [$€-419]");
 
-            worksheet.Columns().AdjustToContents(); // Автоширина столбцов
-
-            string fileName = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                $"Журнал поступления товаров {DateTime.Now:yyyy-MM-dd}.xlsx"
-            );
+            worksheet.Columns().AdjustToContents();
 
             try
             {
