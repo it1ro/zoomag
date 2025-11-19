@@ -20,7 +20,6 @@
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
-        
         <!-- Таблица: Список товаров по имени -->
         <DataGrid x:Name="ProductNameGrid" 
                   AutoGenerateColumns="False" 
@@ -28,8 +27,7 @@
                   Grid.Column="0" 
                   Grid.Row="0" 
                   Grid.ColumnSpan="2" 
-                  Grid.RowSpan="4" 
-                  FontSize="15">
+                  Grid.RowSpan="4">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Наименование" 
                                     Binding="{Binding Path=Name}" 
@@ -39,7 +37,6 @@
                                     Width="200"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        
         <!-- Таблица: Детали товаров -->
         <DataGrid x:Name="ProductDetailsGrid" 
                   AutoGenerateColumns="False" 
@@ -47,8 +44,7 @@
                   Grid.Column="3" 
                   Grid.Row="0" 
                   Grid.ColumnSpan="2" 
-                  Grid.RowSpan="4" 
-                  FontSize="15">
+                  Grid.RowSpan="4">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Название" 
                                     Binding="{Binding Path=Name}" 
@@ -67,21 +63,18 @@
                                     Width="200"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        
         <Button Grid.Row="2" 
                 Grid.Column="2" 
                 x:Name="BackButton" 
                 Content="Назад" 
-                FontSize="24" 
                 Grid.RowSpan="2" 
-                Click="GoToAdmin"></Button>
-                
+                Click="GoToAdmin"
+                Style="{StaticResource BackButton}"></Button>
         <Button Grid.Row="0" 
                 Grid.Column="2" 
                 x:Name="LoadDetailsButton" 
                 Content="Заполнить таблицу" 
-                FontSize="22" 
                 Grid.RowSpan="2" 
-                Click="LoadProductDetails"></Button>
+                Click="LoadProductDetails"/>
     </Grid>
 </Window>

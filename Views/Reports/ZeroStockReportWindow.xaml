@@ -8,25 +8,11 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <TextBlock Grid.Row="0" Text="Товары с нулевым остатком" 
-                   FontSize="18" FontWeight="Bold" Margin="10,10,10,10" HorizontalAlignment="Center"/>
-
-        <DataGrid Grid.Row="1" Name="ZeroStockDataGrid" 
-                  AutoGenerateColumns="False" 
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  Margin="10,0,10,10">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="100"/>
-            </DataGrid.Columns>
-        </DataGrid>
-
+        <TextBlock Grid.Row="0" Text="Товары с нулевым остатком" FontWeight="Bold" Margin="10,10,10,10" HorizontalAlignment="Center"/>
+        <DataGrid Grid.Row="1" Name="ZeroStockDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" Margin="10,0,10,10"/>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button Name="ExportToExcelButton" Content="Выгрузить в Excel" Width="120" Height="30" Margin="5" Click="ExportToExcel_Click"/>
-            <Button Name="BackToReportsButton" Content="Назад к отчетам" Width="120" Height="30" Margin="5" Click="BackToReports_Click"/>
+            <Button Name="ExportToExcelButton" Content="Выгрузить в Excel" Click="ExportToExcel_Click" Style="{StaticResource ExportButton}"/>
+            <Button Name="BackToReportsButton" Content="Назад к отчетам" Click="BackToReports_Click" Style="{StaticResource BackButton}"/>
         </StackPanel>
     </Grid>
 </Window>

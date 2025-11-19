@@ -6,12 +6,8 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
-        Title="Отчет о поступлении товаров за день" 
-        Height="650" Width="1100"
-        FontFamily="Segoe UI" 
-        WindowStartupLocation="CenterScreen"
-        Background="#f8f9fa">
-    
+        Title="Отчет о поступлении товаров за день" Height="650" Width="1100"
+        WindowStartupLocation="CenterScreen">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -20,21 +16,8 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <TextBlock Grid.Row="0" 
-                   Text="Отчет о поступлении товаров за день" 
-                   FontSize="20" 
-                   FontWeight="Bold" 
-                   Margin="0,0,0,15"/>
-        
-        <!-- Панель фильтрации с одним выбором даты -->
-        <Border Grid.Row="1" 
-                BorderBrush="#dee2e6" 
-                BorderThickness="1" 
-                CornerRadius="4" 
-                Padding="10" 
-                Margin="0,0,0,15"
-                Background="White">
+        <TextBlock Grid.Row="0" Text="Отчет о поступлении товаров за день" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+        <Border Grid.Row="1" CornerRadius="4" Padding="10" Margin="0,0,0,15">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -42,134 +25,35 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="0" 
-                           Text="Дата поступления" 
-                           FontSize="12" 
-                           VerticalAlignment="Center"
-                           Margin="0,0,5,0"/>
-                <DatePicker Grid.Column="1" 
-                            x:Name="DeliveryDatePicker" 
-                            SelectedDate="{x:Static sys:DateTime.Today}" 
-                            Margin="0,0,10,0"/>
-                
-                <Button Grid.Column="2" 
-                        x:Name="GenerateReportButton"
-                        Content="Сформировать отчет" 
-                        Click="GenerateReport"
-                        Padding="15,5" 
-                        Margin="0,0,10,0"
-                        Background="#0d6efd" 
-                        Foreground="White"/>
-                
-                <Button Grid.Column="3" 
-                        x:Name="ResetFilterButton"
-                        Content="Сбросить" 
-                        Click="ResetFilter" 
-                        Padding="15,5" 
-                        Background="#6c757d" 
-                        Foreground="White"/>
+                <TextBlock Grid.Column="0" Text="Дата поступления" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <DatePicker Grid.Column="1" x:Name="DeliveryDatePicker" SelectedDate="{x:Static sys:DateTime.Today}" Margin="0,0,10,0"/>
+                <Button Grid.Column="2" x:Name="GenerateReportButton" Content="Сформировать отчет" Click="GenerateReport"/>
+                <Button Grid.Column="3" x:Name="ResetFilterButton" Content="Сбросить" Click="ResetFilter" Style="{StaticResource ResetButton}"/>
             </Grid>
         </Border>
-        
-        <!-- Статистика -->
-        <Grid Grid.Row="2" 
-              Margin="0,0,0,15">
+        <Grid Grid.Row="2" Margin="0,0,0,15">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
-            <Border Grid.Column="0" 
-                    Background="#e9ecef" 
-                    BorderBrush="#dee2e6" 
-                    BorderThickness="1" 
-                    CornerRadius="4" 
-                    Padding="15" 
-                    Margin="0,0,5,0">
+            <Border Grid.Column="0" CornerRadius="4" Padding="15" Margin="0,0,5,0">
                 <StackPanel>
-                    <TextBlock Text="Общая сумма" 
-                               FontSize="12" 
-                               FontWeight="SemiBold" 
-                               Foreground="#495057"/>
-                    <TextBlock x:Name="TotalAmountDisplay" 
-                               Text="0" 
-                               FontSize="20" 
-                               FontWeight="Bold" 
-                               HorizontalAlignment="Center" 
-                               Margin="0,5"/>
-                    <TextBlock Text="рублей" 
-                               FontSize="10" 
-                               HorizontalAlignment="Center" 
-                               Foreground="#6c757d"/>
+                    <TextBlock Text="Общая сумма" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TotalAmountDisplay" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                    <TextBlock Text="рублей" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
-            
-            <Border Grid.Column="1" 
-                    Background="#e9ecef" 
-                    BorderBrush="#dee2e6" 
-                    BorderThickness="1" 
-                    CornerRadius="4" 
-                    Padding="15" 
-                    Margin="5,0,0,0">
+            <Border Grid.Column="1" CornerRadius="4" Padding="15" Margin="5,0,0,0">
                 <StackPanel>
-                    <TextBlock Text="Количество товаров" 
-                               FontSize="12" 
-                               FontWeight="SemiBold" 
-                               Foreground="#495057"/>
-                    <TextBlock x:Name="TotalQuantityDisplay" 
-                               Text="0" 
-                               FontSize="20" 
-                               FontWeight="Bold" 
-                               HorizontalAlignment="Center" 
-                               Margin="0,5"/>
-                    <TextBlock Text="единиц" 
-                               FontSize="10" 
-                               HorizontalAlignment="Center" 
-                               Foreground="#6c757d"/>
+                    <TextBlock Text="Количество товаров" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TotalQuantityDisplay" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                    <TextBlock Text="единиц" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
         </Grid>
-        
-        <!-- Таблица -->
-        <DataGrid x:Name="ReportDataGrid" 
-                  Grid.Row="3"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  Background="White"
-                  BorderBrush="#dee2e6"
-                  BorderThickness="1"
-                  GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" 
-                                    Binding="{Binding Name}" 
-                                    Width="*"/>
-                <DataGridTextColumn Header="Количество" 
-                                    Binding="{Binding Amount}" 
-                                    Width="100"/>
-                <DataGridTextColumn Header="Цена за ед." 
-                                    Binding="{Binding Price, StringFormat={}{0:F0}}" 
-                                    Width="120"/>
-                <DataGridTextColumn Header="Сумма" 
-                                    Binding="{Binding Total, StringFormat={}{0:F0}}" 
-                                    Width="120"/>
-            </DataGrid.Columns>
-        </DataGrid>
-        
-        <!-- Кнопки навигации -->
-        <StackPanel Grid.Row="4" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    Margin="0,15,0,0">
-            <Button x:Name="BackToMainMenuButton"
-                    Content="Назад в главное меню" 
-                    Click="BackToMainMenu"
-                    Padding="15,5" 
-                    Margin="0,0,10,0"
-                    Background="#6c757d" 
-                    Foreground="White"/>
+        <DataGrid x:Name="ReportDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"/>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button x:Name="BackToMainMenuButton" Content="Назад в главное меню" Click="BackToMainMenu" Style="{StaticResource BackButton}"/>
         </StackPanel>
     </Grid>
 </Window>

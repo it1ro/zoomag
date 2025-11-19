@@ -6,16 +6,13 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
-        Title="Продажа товаров" 
-        Height="700" 
+        Title="Продажа товаров"
+        Height="700"
         Width="1200"
         MinHeight="600"
         MinWidth="1000"
-        FontFamily="Segoe UI" 
         WindowState="Normal"
-        WindowStartupLocation="CenterScreen"
-        Background="#f8f9fa">
-    
+        WindowStartupLocation="CenterScreen">
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>        <!-- Заголовок -->
@@ -25,107 +22,85 @@
             <RowDefinition Height="Auto"/>        <!-- Таблица чека -->
             <RowDefinition Height="Auto"/>        <!-- Кнопки управления -->
         </Grid.RowDefinitions>
-        
+
         <!-- Заголовок -->
-        <TextBlock Grid.Row="0" 
-                   Text="Продажа товаров" 
-                   FontSize="24" 
-                   FontWeight="Bold" 
+        <TextBlock Grid.Row="0"
+                   Text="Продажа товаров"
+                   FontWeight="Bold"
                    HorizontalAlignment="Center"
                    Margin="0,0,0,15"/>
-        
+
         <!-- Поиск и фильтры -->
-        <Border Grid.Row="1" 
-                BorderBrush="#dee2e6" 
-                BorderThickness="1" 
-                CornerRadius="4" 
-                Padding="10" 
-                Margin="0,0,0,10"
-                Background="White">
+        <Border Grid.Row="1"
+                CornerRadius="4"
+                Padding="10"
+                Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="Поиск товара:" 
-                               FontSize="12" 
+                    <TextBlock Text="Поиск товара:"
                                VerticalAlignment="Center"
                                Margin="0,0,5,0"/>
-                    <TextBox x:Name="SearchInput" 
-                             FontSize="14"
+                    <TextBox x:Name="SearchInput"
                              Height="35"
-                             Padding="10,0"
                              VerticalContentAlignment="Center"
                              Margin="0,0,10,0"
                              TextChanged="SearchInput_TextChanged"/>
                 </StackPanel>
-                
-                <Button Grid.Column="1" 
-                        x:Name="RefreshButton" 
-                        Content="Очистить поиск" 
-                        Click="RefreshProductList" 
-                        FontSize="12"
+                <Button Grid.Column="1"
+                        x:Name="RefreshButton"
+                        Content="Очистить поиск"
+                        Click="RefreshProductList"
                         Height="35"
-                        Padding="15,5" 
                         Margin="0,0,5,0"
-                        Background="#6c757d" 
-                        Foreground="White"/>
-                
-                <Button Grid.Column="2" 
-                        x:Name="FilterButton" 
-                        Content="Фильтр по категории" 
-                        Click="ShowCategoryFilter" 
-                        FontSize="12"
+                        Style="{StaticResource ResetButton}" />
+                <Button Grid.Column="2"
+                        x:Name="FilterButton"
+                        Content="Фильтр по категории"
+                        Click="ShowCategoryFilter"
                         Height="35"
-                        Padding="15,5" 
-                        Background="#0d6efd" 
+                        Background="#0d6efd"
                         Foreground="White"/>
             </Grid>
         </Border>
-        
+
         <!-- Таблица товаров -->
-        <DataGrid x:Name="ProductListGrid" 
+        <DataGrid x:Name="ProductListGrid"
                   Grid.Row="2"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserAddRows="False"
-                  Background="White"
-                  BorderBrush="#dee2e6"
-                  BorderThickness="1"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
                   SelectionMode="Single"
-                  Margin="0,0,0,10"
-                  FontSize="13">
+                  Margin="0,0,0,10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" 
-                                    Binding="{Binding Name}" 
+                <DataGridTextColumn Header="Наименование"
+                                    Binding="{Binding Name}"
                                     Width="*"/>
-                <DataGridTextColumn Header="Категория" 
-                                    Binding="{Binding CategoryName}" 
+                <DataGridTextColumn Header="Категория"
+                                    Binding="{Binding CategoryName}"
                                     Width="120"/>
-                <DataGridTextColumn Header="Ед. изм." 
-                                    Binding="{Binding UnitName}" 
+                <DataGridTextColumn Header="Ед. изм."
+                                    Binding="{Binding UnitName}"
                                     Width="80"/>
-                <DataGridTextColumn Header="Цена" 
-                                    Binding="{Binding Price, StringFormat={}{0:F0}}" 
+                <DataGridTextColumn Header="Цена"
+                                    Binding="{Binding Price, StringFormat={}{0:F0}}"
                                     Width="100"/>
-                <DataGridTextColumn Header="Остаток" 
-                                    Binding="{Binding Qty}" 
+                <DataGridTextColumn Header="Остаток"
+                                    Binding="{Binding Qty}"
                                     Width="80"/>
             </DataGrid.Columns>
         </DataGrid>
-        
+
         <!-- Информация о чеке -->
-        <Border Grid.Row="3" 
-                Background="#e9ecef" 
-                BorderBrush="#dee2e6" 
-                BorderThickness="1" 
-                CornerRadius="4" 
-                Padding="15" 
+        <Border Grid.Row="3"
+                CornerRadius="4"
+                Padding="15"
                 Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -134,124 +109,97 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="Товаров в чеке:" 
-                               FontSize="14" 
-                               FontWeight="SemiBold" 
+                    <TextBlock Text="Товаров в чеке:"
+                               FontWeight="SemiBold"
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"/>
-                    <TextBlock x:Name="ItemCountDisplay" 
-                               Text="0" 
-                               FontSize="18" 
-                               FontWeight="Bold" 
+                    <TextBlock x:Name="ItemCountDisplay"
+                               FontWeight="Bold"
                                VerticalAlignment="Center"/>
                 </StackPanel>
-                
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0">
-                    <TextBlock Text="Общая сумма:" 
-                               FontSize="14" 
-                               FontWeight="SemiBold" 
+                    <TextBlock Text="Общая сумма:"
+                               FontWeight="SemiBold"
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"/>
-                    <TextBlock x:Name="TotalAmountDisplay" 
-                               Text="0" 
-                               FontSize="18" 
-                               FontWeight="Bold" 
+                    <TextBlock x:Name="TotalAmountDisplay"
+                               FontWeight="Bold"
                                VerticalAlignment="Center"/>
-                    <TextBlock Text="руб." 
-                               FontSize="12" 
-                               VerticalAlignment="Center" 
-                               Foreground="#6c757d"/>
+                    <TextBlock Text="руб."
+                               VerticalAlignment="Center"/>
                 </StackPanel>
-                
-                <Button Grid.Column="2" 
-                        x:Name="ClearReceiptButton" 
-                        Content="Очистить чек" 
-                        Click="ClearCurrentReceipt" 
-                        FontSize="12"
+                <Button Grid.Column="2"
+                        x:Name="ClearReceiptButton"
+                        Content="Очистить чек"
+                        Click="ClearCurrentReceipt"
                         Height="35"
-                        Padding="15,5" 
                         Margin="0,0,5,0"
-                        Background="#dc3545" 
-                        Foreground="White"/>
-                
-                <Button Grid.Column="3" 
-                        x:Name="AddToReceiptButton" 
-                        Content="Добавить в чек" 
-                        Click="AddSelectedProductToReceipt" 
-                        FontSize="12"
+                        Style="{StaticResource DangerButton}" />
+                <Button Grid.Column="3"
+                        x:Name="AddToReceiptButton"
+                        Content="Добавить в чек"
+                        Click="AddSelectedProductToReceipt"
                         Height="35"
-                        Padding="20,5" 
-                        Background="#28a745" 
+                        Background="#28a745"
                         Foreground="White"/>
             </Grid>
         </Border>
-        
+
         <!-- Таблица чека -->
-        <DataGrid x:Name="ReceiptItemsGrid" 
+        <DataGrid x:Name="ReceiptItemsGrid"
                   Grid.Row="4"
                   AutoGenerateColumns="False"
                   IsReadOnly="False"
                   CanUserAddRows="False"
-                  Background="White"
-                  BorderBrush="#dee2e6"
-                  BorderThickness="1"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
-                  Margin="0,0,0,10"
-                  FontSize="13">
+                  Margin="0,0,0,10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" 
-                                    Binding="{Binding Name}" 
+                <DataGridTextColumn Header="Наименование"
+                                    Binding="{Binding Name}"
                                     Width="*"/>
-                <DataGridTextColumn Header="Цена" 
-                                    Binding="{Binding Price, StringFormat={}{0:F0}}" 
+                <DataGridTextColumn Header="Цена"
+                                    Binding="{Binding Price, StringFormat={}{0:F0}}"
                                     Width="100"/>
-                <DataGridTextColumn Header="Кол-во" 
-                                    Binding="{Binding Quantity}" 
+                <DataGridTextColumn Header="Кол-во"
+                                    Binding="{Binding Quantity}"
                                     Width="80"/>
-                <DataGridTextColumn Header="Сумма" 
-                                    Binding="{Binding Total, StringFormat={}{0:F0}}" 
+                <DataGridTextColumn Header="Сумма"
+                                    Binding="{Binding Total, StringFormat={}{0:F0}}"
                                     Width="100"/>
                 <DataGridTemplateColumn Header="Действия" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="Удалить" 
+                            <Button Content="Удалить"
                                     Click="RemoveItemFromReceipt"
                                     FontSize="10"
                                     Padding="8,2"
-                                    Background="#dc3545"
-                                    Foreground="White"
-                                    Margin="2"/>
+                                    Style="{StaticResource DangerButton}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-        
+
         <!-- Кнопки управления -->
-        <StackPanel Grid.Row="5" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
+        <StackPanel Grid.Row="5"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
                     Margin="0,10,0,0">
-            <Button x:Name="FinalizeSaleButton" 
-                    Content="Купить" 
-                    Click="FinalizeCurrentSale" 
-                    FontSize="16"
+            <Button x:Name="FinalizeSaleButton"
+                    Content="Купить"
+                    Click="FinalizeCurrentSale"
                     Height="45"
-                    Padding="30,10" 
+                    Padding="30,10"
                     Margin="0,0,10,0"
-                    Background="#28a745" 
-                    Foreground="White"/>
-            <Button x:Name="BackToMainMenuButton" 
-                    Content="Назад в главное меню" 
-                    Click="ReturnToMainMenu" 
-                    FontSize="16"
+                    Style="{StaticResource SaveButton}" />
+            <Button x:Name="BackToMainMenuButton"
+                    Content="Назад в главное меню"
+                    Click="ReturnToMainMenu"
                     Height="45"
-                    Padding="30,10" 
-                    Background="#6c757d" 
-                    Foreground="White"/>
+                    Padding="30,10"
+                    Style="{StaticResource BackButton}" />
         </StackPanel>
     </Grid>
 </Window>
