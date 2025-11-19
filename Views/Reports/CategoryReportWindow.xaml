@@ -9,8 +9,8 @@
         <StackPanel DockPanel.Dock="Right" Width="200" Margin="10">
             <Label Content="Выберите категорию:"/>
             <ComboBox x:Name="CategorySelector" Margin="0,0,0,10" SelectionChanged="OnCategoryChanged"/>
-            <Button x:Name="ExportToExcelButton" Content="Вывод в Excel" Click="ExportToExcel" Style="{StaticResource ExportButton}"/>
-            <Button x:Name="BackButton" Content="Назад" Click="GoToAdmin" Style="{StaticResource BackButton}"/>
+            <Button x:Name="ExportToExcelButton" Content="Вывод в Excel" Click="ExportToExcel" />
+            <Button x:Name="BackButton" Content="Назад" Click="GoToAdmin" />
         </StackPanel>
         <DataGrid x:Name="CategoryProductsGrid" AutoGenerateColumns="False" ItemsSource="{Binding Privoz}"/> <!-- TODO понять откуда Privoz и зачем -->
     </DockPanel>

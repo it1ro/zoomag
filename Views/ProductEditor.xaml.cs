@@ -1,5 +1,4 @@
-﻿// File: Zoomag/Views/ProductEditor.xaml.cs
-using System.Windows;
+﻿using System.Windows;
 using Microsoft.Win32;
 using ClosedXML.Excel;
 using Zoomag.Data;

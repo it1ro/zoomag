@@ -36,13 +36,13 @@ namespace Zoomag.Views
                 }
                 else
                 {
-                    MessageBox.Show("Invalid credentials.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Введен не верный логин или пароль.", "Неверные данные для входа", MessageBoxButton.OK);
                     PasswordBox.Clear();
                 }
             }
             else
             {
-                MessageBox.Show("Please select a role.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Выберите роль", "Роль не выбрана", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

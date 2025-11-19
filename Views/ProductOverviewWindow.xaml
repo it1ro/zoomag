@@ -68,8 +68,7 @@
                 x:Name="BackButton" 
                 Content="Назад" 
                 Grid.RowSpan="2" 
-                Click="GoToAdmin"
-                Style="{StaticResource BackButton}"></Button>
+                Click="GoToAdmin" ></Button>
         <Button Grid.Row="0" 
                 Grid.Column="2" 
                 x:Name="LoadDetailsButton" 

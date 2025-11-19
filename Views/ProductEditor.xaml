@@ -65,7 +65,6 @@
                 Grid.Column="2" 
                 x:Name="BackButton" 
                 Content="Назад" 
-                Grid.RowSpan="2"
-                Style="{StaticResource BackButton}"/>
+                Grid.RowSpan="2" />
     </Grid>
 </Window>

@@ -247,11 +247,6 @@ namespace Zoomag.Views
             SearchInput.Clear();
         }
 
-        private void ShowCategoryFilter(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Функция фильтрации по категории будет реализована в следующей версии.",
-                    "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
 
         private void UpdateReceiptDisplay()
         {

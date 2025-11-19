@@ -3,9 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:local="clr-namespace:Zoomag.Views"
         mc:Ignorable="d"
-        Title="Продавец — Petshop" Height="350" Width="450"
+        Title="Окно продавца" Height="350" Width="450"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="30">
         <StackPanel>
@@ -14,7 +13,6 @@
             <Button Content="Продажа" Height="40" Margin="0,0,0,10" Click="ShowSale"/>
             <Button Content="Каталог товаров" Height="40" Margin="0,0,0,10" Click="ShowProductOverview"/>
             <Button Content="Склад" Height="40" Margin="0,0,0,10" Click="ShowStock"/>
-            <Button Content="Выход" Height="40" Margin="0,30,0,0" Click="Logout" Style="{StaticResource BackButton}"/>
         </StackPanel>
     </Grid>
 </Window>

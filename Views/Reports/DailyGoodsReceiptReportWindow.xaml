@@ -28,7 +28,7 @@
                 <TextBlock Grid.Column="0" Text="Дата поступления" VerticalAlignment="Center" Margin="0,0,5,0"/>
                 <DatePicker Grid.Column="1" x:Name="DeliveryDatePicker" SelectedDate="{x:Static sys:DateTime.Today}" Margin="0,0,10,0"/>
                 <Button Grid.Column="2" x:Name="GenerateReportButton" Content="Сформировать отчет" Click="GenerateReport"/>
-                <Button Grid.Column="3" x:Name="ResetFilterButton" Content="Сбросить" Click="ResetFilter" Style="{StaticResource ResetButton}"/>
+                <Button Grid.Column="3" x:Name="ResetFilterButton" Content="Сбросить" Click="ResetFilter" />
             </Grid>
         </Border>
         <Grid Grid.Row="2" Margin="0,0,0,15">
@@ -53,7 +53,7 @@
         </Grid>
         <DataGrid x:Name="ReportDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"/>
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button x:Name="BackToMainMenuButton" Content="Назад в главное меню" Click="BackToMainMenu" Style="{StaticResource BackButton}"/>
+            <Button x:Name="BackToMainMenuButton" Content="Назад в главное меню" Click="BackToMainMenu" />
         </StackPanel>
     </Grid>
 </Window>

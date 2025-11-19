@@ -11,8 +11,8 @@
         <TextBlock Grid.Row="0" Text="Товары с нулевым остатком" FontWeight="Bold" Margin="10,10,10,10" HorizontalAlignment="Center"/>
         <DataGrid Grid.Row="1" Name="ZeroStockDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" Margin="10,0,10,10"/>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button Name="ExportToExcelButton" Content="Выгрузить в Excel" Click="ExportToExcel_Click" Style="{StaticResource ExportButton}"/>
-            <Button Name="BackToReportsButton" Content="Назад к отчетам" Click="BackToReports_Click" Style="{StaticResource BackButton}"/>
+            <Button Name="ExportToExcelButton" Content="Выгрузить в Excel" Click="ExportToExcel_Click" />
+            <Button Name="BackToReportsButton" Content="Назад к отчетам" Click="BackToReports_Click" />
         </StackPanel>
     </Grid>
 </Window>

@@ -22,6 +22,6 @@
         <Button Grid.Column="1" Grid.Row="0" x:Name="IncomingGoodsJournalButton" Content="Журнал поступления товаров" Click="ViewIncomingGoodsJournal"/>
         <Button Grid.Column="1" Grid.Row="1" x:Name="StockReportButton" Content="Отчет по складу" Click="GenerateStockReport"/>
         <Button Grid.Column="1" Grid.Row="2" x:Name="ZeroStockButton" Content="Нулевые позиции" Click="ViewZeroStockReport"/>
-        <Button Grid.Column="0" Grid.Row="3" x:Name="BackButton" Content="Назад" Click="GoToAdmin" Grid.ColumnSpan="2" Style="{StaticResource BackButton}"/>
+        <Button Grid.Column="0" Grid.Row="3" x:Name="BackButton" Content="Назад" Click="GoToAdmin" Grid.ColumnSpan="2" />
     </Grid>
 </Window>

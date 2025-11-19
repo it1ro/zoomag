@@ -1,5 +1,5 @@
 using System.Windows;
-using Zoomag.Views; // Для доступа к SaleWindow, StockWindow, ProductOverviewWindow
+
 
 namespace Zoomag.Views;
 
@@ -12,30 +12,22 @@ public partial class SellerWindow : Window
 
     private void ShowSale(object sender, RoutedEventArgs e)
     {
-        var saleWindow = new SaleWindow(); // Открывает окно продажи
+        var saleWindow = new SaleWindow();
         saleWindow.Show();
-        // this.Close(); // Раскомментируй, если хочешь закрыть текущее окно
+
     }
 
     private void ShowStock(object sender, RoutedEventArgs e)
     {
-        var stockWindow = new ProductOverviewWindow(); // Открывает окно склада
+        var stockWindow = new ProductOverviewWindow();
         stockWindow.Show();
-        // this.Close(); // Раскомментируй, если хочешь закрыть текущее окно
     }
 
     private void ShowProductOverview(object sender, RoutedEventArgs e)
     {
-        var productOverviewWindow = new ProductOverviewWindow(); // Открывает окно каталога товаров
+        var productOverviewWindow = new ProductOverviewWindow();
         productOverviewWindow.Show();
-        // this.Close(); // Раскомментируй, если хочешь закрыть текущое окно
     }
 
-    private void Logout(object sender, RoutedEventArgs e)
-    {
-        // Закрывает текущее окно продавца и возвращается к окну входа
-        this.Close();
-        var loginWindow = new LoginWindow();
-        loginWindow.Show();
-    }
+
 }
