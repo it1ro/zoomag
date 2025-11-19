@@ -6,6 +6,7 @@ DELETE FROM Supply;
 DELETE FROM Sale;
 DELETE FROM Category;
 DELETE FROM Unit;
+DELETE FROM User;
 
 -- 2. СБРОС СЧЁТЧИКОВ и ВКЛЮЧЕНИЕ IDENTITY_INSERT
 DBCC CHECKIDENT('Unit', RESEED, 0);
@@ -90,3 +91,8 @@ INSERT INTO SalesProducts (SaleId, ProductId) VALUES
                                                   (5, 3),
                                                   (5, 19),
                                                   (5, 20);
+
+
+INSERT INTO User (Id, Login, PasswordHash, Role) VALUES
+    (1, 'admin', 'admin', 0), -- Admin
+    (2, 'seller1', '123', 1); -- Seller

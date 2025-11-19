@@ -100,12 +100,7 @@ namespace Zoomag.Views
             var existingItem = _receiptItems.FirstOrDefault(r => r.ProductId == selectedProductDto.Id);
             if (existingItem != null)
             {
-                if (existingItem.Quantity + 1 > selectedProductDto.Qty)
-                {
-                    MessageBox.Show($"Недостаточно товара на складе. Доступно: {selectedProductDto.Qty}",
-                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+
 
                 existingItem.Quantity++;
                 existingItem.Total = existingItem.Quantity * existingItem.Price;
@@ -123,6 +118,11 @@ namespace Zoomag.Views
                 });
                 ReceiptItemsGrid.Items.Refresh();
             }
+
+            // ✅ Уменьшаем количество в DTO и обновляем отображение
+            selectedProductDto.Qty--;
+            ProductListGrid.Items.Refresh(); // Обновляем DataGrid
+
             UpdateReceiptDisplay();
         }
         private void RemoveItemFromReceipt(object sender, RoutedEventArgs e)
@@ -132,8 +132,16 @@ namespace Zoomag.Views
             var receiptItem = dataGridRow?.DataContext as ReceiptItem;
             if (receiptItem != null)
             {
+                // ✅ Найти соответствующий DTO и увеличить Qty
+                var productDto = _allProducts.FirstOrDefault(p => p.Id == receiptItem.ProductId);
+                if (productDto != null)
+                {
+                    productDto.Qty += receiptItem.Quantity; // Возвращаем количество
+                }
+
                 _receiptItems.Remove(receiptItem);
-                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
+                ReceiptItemsGrid.Items.Refresh();
+                ProductListGrid.Items.Refresh(); // Обновляем список товаров
                 UpdateReceiptDisplay();
             }
         }
@@ -146,10 +154,21 @@ namespace Zoomag.Views
                 return;
             }
             if (MessageBox.Show("Вы уверены, что хотите очистить чек?", "Подтверждение",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
+                // ✅ Возвращаем товары обратно
+                foreach (var receiptItem in _receiptItems)
+                {
+                    var productDto = _allProducts.FirstOrDefault(p => p.Id == receiptItem.ProductId);
+                    if (productDto != null)
+                    {
+                        productDto.Qty += receiptItem.Quantity;
+                    }
+                }
+
                 _receiptItems.Clear();
-                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
+                ReceiptItemsGrid.Items.Refresh();
+                ProductListGrid.Items.Refresh(); // Обновляем список товаров
                 UpdateReceiptDisplay();
             }
         }
