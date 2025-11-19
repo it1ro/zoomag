@@ -51,8 +51,7 @@ namespace Zoomag.Views
             if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
                 return false;
 
-            // ✅ Проверяем enum
-            return (role == UserRole.Admin || role == UserRole.Seller);
+            return (role == UserRole.Admin && password == "admin") || ( role == UserRole.Seller && password == "123");
         }
     }
 }

@@ -12,7 +12,7 @@ using Zoomag.Data;
 namespace Zoomag.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251117125730_InitialCreate")]
+    [Migration("20251119000210_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -184,6 +184,30 @@ namespace Zoomag.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Unit");
+                });
+
+            modelBuilder.Entity("Zoomag.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("Zoomag.Models.Product", b =>
