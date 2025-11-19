@@ -85,30 +85,34 @@ namespace Zoomag.Views
             if (ProductListGrid.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите товар для добавления в чек!",
-                        "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-
             var selectedProductDto = (ProductDisplayDto)ProductListGrid.SelectedItem;
+
             if (selectedProductDto.Qty <= 0)
             {
                 MessageBox.Show("Товар закончился на складе!",
-                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Проверяем, есть ли уже этот товар в чеке
             var existingItem = _receiptItems.FirstOrDefault(r => r.ProductId == selectedProductDto.Id);
             if (existingItem != null)
             {
-                // Если товар уже есть в чеке, увеличиваем количество
+                if (existingItem.Quantity + 1 > selectedProductDto.Qty)
+                {
+                    MessageBox.Show($"Недостаточно товара на складе. Доступно: {selectedProductDto.Qty}",
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 existingItem.Quantity++;
                 existingItem.Total = existingItem.Quantity * existingItem.Price;
-                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
+                ReceiptItemsGrid.Items.Refresh();
             }
             else
             {
-                // Если товара нет в чеке, добавляем новую позицию
                 _receiptItems.Add(new ReceiptItem
                 {
                     ProductId = selectedProductDto.Id,
@@ -117,12 +121,10 @@ namespace Zoomag.Views
                     Quantity = 1,
                     Total = selectedProductDto.Price
                 });
-                ReceiptItemsGrid.Items.Refresh(); // Обновляем отображение
+                ReceiptItemsGrid.Items.Refresh();
             }
-
             UpdateReceiptDisplay();
         }
-
         private void RemoveItemFromReceipt(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
