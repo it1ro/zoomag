@@ -3,119 +3,202 @@
 namespace Zoomag.Views;
 
 using System.Windows;
+using System.Windows.Controls; // Добавлено для ComboBox
 using Data;
 using Models;
 using Reports;
 
 /// <summary>
-///     Interaction logic for AdminWindow.xaml
+/// Interaction logic for AdminWindow.xaml
 /// </summary>
 public partial class AdminWindow : Window, IDisposable
 {
-    private readonly AppDbContext _context;
+    // Удаляем поле _context из класса.
 
     public AdminWindow()
     {
         InitializeComponent();
-        _context = new AppDbContext();
         LoadUnits();
         LoadCategories();
     }
 
     public void Dispose()
     {
-        _context?.Dispose();
+        // Не нужно больше уничтожать _context здесь, так как он больше не поле класса.
+        // Однако, если у окна есть другие ресурсы, их можно освободить.
+        GC.SuppressFinalize(this);
     }
 
     private void LoadUnits()
     {
-        UnitSelector.ItemsSource = _context.Unit.ToList();
+        // Создаём контекст только для этой операции
+        using var context = new AppDbContext();
+        // Привязываем список объектов Unit к ComboBox
+        UnitSelector.ItemsSource = context.Unit.ToList();
         UnitSelector.SelectedIndex = -1; // Очищаем выбор
     }
 
     private void LoadCategories()
     {
-        CategorySelector.ItemsSource = _context.Category.ToList();
+        // Создаём контекст только для этой операции
+        using var context = new AppDbContext();
+        // Привязываем список объектов Category к ComboBox
+        CategorySelector.ItemsSource = context.Category.ToList();
         CategorySelector.SelectedIndex = -1; // Очищаем выбор
     }
 
     private void AddCategory(object sender, RoutedEventArgs e)
     {
-        var categoryName = CategoryInput.Text;
-        if (string.IsNullOrWhiteSpace(categoryName)) return;
+        var categoryName = CategoryInput.Text; // Получаем исходный ввод
+        // --- ИЗМЕНЕНО: Добавлено Trim() ---
+        var trimmedCategoryName = categoryName?.Trim(); // Убираем пробелы в начале и конце
 
-        var category = new Category { Name = categoryName };
-        _context.Category.Add(category);
-        _context.SaveChanges();
-        LoadCategories(); // Обновляем список
-        CategoryInput.Clear();
+        // --- ИЗМЕНЕНО: Проверяем trimmedCategoryName ---
+        if (string.IsNullOrWhiteSpace(trimmedCategoryName))
+        {
+            MessageBox.Show("Название категории не может быть пустым или содержать только пробелы.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            CategoryInput.Clear(); // Очищаем поле ввода
+            return;
+        }
+
+        using var context = new AppDbContext();
+        // --- ИЗМЕНЕНО: Используем trimmedCategoryName для проверки дубликата ---
+        if (context.Category.Any(c => c.Name == trimmedCategoryName))
+        {
+            MessageBox.Show($"Категория с названием '{trimmedCategoryName}' уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            CategoryInput.Clear(); // Очищаем поле ввода
+            return;
+        }
+
+        try
+        {
+            // --- ИЗМЕНЕНО: Используем trimmedCategoryName для создания объекта ---
+            var category = new Category { Name = trimmedCategoryName };
+            context.Category.Add(category);
+            context.SaveChanges();
+            LoadCategories(); // Обновляем список
+            CategoryInput.Clear();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка при добавлении категории: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void AddUnit(object sender, RoutedEventArgs e)
     {
-        var unitName = UnitInput.Text;
-        if (string.IsNullOrWhiteSpace(unitName)) return;
+        var unitName = UnitInput.Text; // Получаем исходный ввод
+        // --- ИЗМЕНЕНО: Добавлено Trim() ---
+        var trimmedUnitName = unitName?.Trim(); // Убираем пробелы в начале и конце
 
-        var unit = new Unit { Name = unitName };
-        _context.Unit.Add(unit);
-        _context.SaveChanges();
-        LoadUnits(); // Обновляем список
-        UnitInput.Clear();
+        // --- ИЗМЕНЕНО: Проверяем trimmedUnitName ---
+        if (string.IsNullOrWhiteSpace(trimmedUnitName))
+        {
+            MessageBox.Show("Название единицы измерения не может быть пустым или содержать только пробелы.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            UnitInput.Clear(); // Очищаем поле ввода
+            return;
+        }
+
+        using var context = new AppDbContext();
+        // --- ИЗМЕНЕНО: Используем trimmedUnitName для проверки дубликата ---
+        if (context.Unit.Any(u => u.Name == trimmedUnitName))
+        {
+            MessageBox.Show($"Единица измерения с названием '{trimmedUnitName}' уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            UnitInput.Clear(); // Очищаем поле ввода
+            return;
+        }
+
+        try
+        {
+            // --- ИЗМЕНЕНО: Используем trimmedUnitName для создания объекта ---
+            var unit = new Unit { Name = trimmedUnitName };
+            context.Unit.Add(unit);
+            context.SaveChanges();
+            LoadUnits(); // Обновляем список
+            UnitInput.Clear();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка при добавлении единицы измерения: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
-    private void SaveProduct(object sender, RoutedEventArgs e)
+    // File: Zoomag/Views/AdminWindow.xaml.cs
+
+private void SaveProduct(object sender, RoutedEventArgs e)
+{
+    // Проверяем, что введены имя и цена
+    if (string.IsNullOrWhiteSpace(ProductNameInput.Text) ||
+        string.IsNullOrWhiteSpace(PriceInput.Text)) // Убедимся, что цена не пустая
     {
-        if (string.IsNullOrWhiteSpace(ProductNameInput.Text) ||
-            string.IsNullOrWhiteSpace(PriceInput.Text) ||
-            string.IsNullOrWhiteSpace(QuantityInput.Text))
-            return;
+        MessageBox.Show("Пожалуйста, заполните все обязательные поля (Имя, Стоимость).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+        return;
+    }
 
-        if (UnitSelector.SelectedIndex < 0 || CategorySelector.SelectedIndex < 0)
+    // Проверяем, что выбраны единица измерения и категория
+    if (UnitSelector.SelectedItem == null || CategorySelector.SelectedItem == null)
+    {
+        MessageBox.Show("Пожалуйста, выберите единицу измерения и категорию.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+        return;
+    }
+
+    // Валидация цены
+    if (!int.TryParse(PriceInput.Text, out int price) || price < 0)
+    {
+        MessageBox.Show("Введите корректную цену (неотрицательное число).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+        return;
+    }
+
+    // --- ИЗМЕНЕНО: Получаем ID выбранных объектов ---
+    var selectedUnitId = ((Unit)UnitSelector.SelectedItem).Id; // Получаем ID
+    var selectedCategoryId = ((Category)CategorySelector.SelectedItem).Id; // Получаем ID
+
+    using var context = new AppDbContext();
+    try
+    {
+        // --- ИЗМЕНЕНО: Загружаем Unit и Category по ID в текущем контексте ---
+        // Это гарантирует, что EF Core знает об этих сущностях и может установить связь
+        var selectedUnit = context.Unit.Find(selectedUnitId);
+        var selectedCategory = context.Category.Find(selectedCategoryId);
+
+        if (selectedUnit == null || selectedCategory == null)
         {
-            MessageBox.Show("Пожалуйста, выберите единицу измерения и категорию.", "Ошибка", MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            MessageBox.Show("Выбранная единица измерения или категория не найдены в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        var unitId = UnitSelector.SelectedIndex + 1; // Индекс + 1, если Id начинаются с 1
-        var categoryId = CategorySelector.SelectedIndex + 1;
-
-        var unit = _context.Unit.Find(unitId);
-        var category = _context.Category.Find(categoryId);
-
-        if (unit == null || category == null)
-        {
-            MessageBox.Show("Единица измерения или категория не найдены.", "Ошибка", MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return;
-        }
-
+        // Создаём новый товар
         var product = new Product
         {
             Name = ProductNameInput.Text,
-            Unit = unit,
-            Category = category,
-            Price = Convert.ToInt32(PriceInput.Text),
-            Amount = Convert.ToInt32(QuantityInput.Text)
+            // --- ИЗМЕНЕНО: Устанавливаем НАВИГАЦИОННЫЕ СВОЙСТВА ---
+            Unit = selectedUnit, // Передаём объект, отслеживаемый текущим контекстом
+            Category = selectedCategory, // Передаём объект, отслеживаемый текущим контекстом
+            Price = price, // Устанавливаем валидированную цену
+            Amount = 0 // Устанавливаем начальное количество 0
         };
 
-        _context.Product.Add(product);
-        _context.SaveChanges();
+        context.Product.Add(product);
+        context.SaveChanges(); // Теперь EF Core корректно установит внешние ключи
         ClearProductForm();
+        MessageBox.Show("Товар успешно сохранён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
     }
-
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Ошибка при сохранении товара: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+}
     private void ClearProductForm()
     {
         ProductNameInput.Clear();
-        QuantityInput.Clear();
         PriceInput.Clear();
-        UnitSelector.SelectedIndex = -1;
-        CategorySelector.SelectedIndex = -1;
+        UnitSelector.SelectedIndex = -1; // Это теперь правильно очищает ComboBox
+        CategorySelector.SelectedIndex = -1; // Это теперь правильно очищает ComboBox
     }
 
     private void ShowArrival(object sender, RoutedEventArgs e)
     {
-        var arrivalWindow = new ProductEditor();
+        var arrivalWindow = new SupplyWindow();
         Hide();
         arrivalWindow.Show();
     }
@@ -139,11 +222,5 @@ public partial class AdminWindow : Window, IDisposable
         var reportsWindow = new AdminReportsWindow();
         Hide();
         reportsWindow.Show();
-    }
-
-    protected override void OnClosed(EventArgs e)
-    {
-        _context?.Dispose();
-        base.OnClosed(e);
     }
 }

@@ -1,17 +1,51 @@
 ﻿namespace Zoomag.Views;
 
+using System.Collections.ObjectModel; // Добавлено
 using System.Windows;
+using System.Windows.Controls; // Добавлено для кнопок, если нужно
 using ClosedXML.Excel;
 using Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using Models;
 
-public partial class ProductEditor : Window
+public partial class SupplyWindow : Window
 {
-    public ProductEditor()
+    // --- НОВЫЕ СВОЙСТВА ДЛЯ ComboBox ---
+    public ObservableCollection<Unit> UnitsList { get; set; } = new();
+    public ObservableCollection<Category> CategoriesList { get; set; } = new();
+    // --- КОНЕЦ НОВЫХ СВОЙСТВ ---
+
+    // --- НОВОЕ СВОЙСТВО ---
+    public ObservableCollection<SupplyImportViewModel> ImportedItems { get; set; } = new();
+    // --- КОНЕЦ НОВОГО СВОЙСТВА ---
+
+    public SupplyWindow()
     {
         InitializeComponent();
+        LoadReferenceData(); // Загружаем справочники
+        // --- УСТАНОВКА DataContext ---
+        DataContext = this; // Привязка свойств ImportedItems, UnitsList, CategoriesList к окну
+        // --- КОНЕЦ УСТАНОВКИ DataContext ---
     }
+
+    // --- НОВЫЙ МЕТОД ЗАГРУЗКИ СПРАВОЧНИКОВ ---
+    private void LoadReferenceData()
+    {
+        using var context = new AppDbContext();
+        UnitsList.Clear();
+        CategoriesList.Clear();
+
+        foreach (var unit in context.Unit.ToList())
+        {
+            UnitsList.Add(unit);
+        }
+        foreach (var category in context.Category.ToList())
+        {
+            CategoriesList.Add(category);
+        }
+    }
+    // --- КОНЕЦ МЕТОДА ---
 
     private void ImportFromExcel(object sender, RoutedEventArgs e)
     {
@@ -31,10 +65,15 @@ public partial class ProductEditor : Window
             return;
         }
 
+        // --- ОЧИСТКА ПРЕДЫДУЩИХ ДАННЫХ ---
+        ImportedItems.Clear();
+        // --- КОНЕЦ ОЧИСТКИ ---
+
         for (var row = 2; row <= lastRow; row++)
         {
             var name = ReadCell(worksheet, row, 1);
-            var unit = ReadCell(worksheet, row, 2);
+            var unitName = ReadCell(worksheet, row, 2); // Теперь это имя
+            var categoryName = ReadCell(worksheet, row, 5); // Предполагаем, что категория в 5-й колонке
             var quantityStr = ReadCell(worksheet, row, 3);
             var priceStr = ReadCell(worksheet, row, 4);
 
@@ -45,15 +84,37 @@ public partial class ProductEditor : Window
                 continue;
             }
 
+            // Найти объекты Unit и Category по имени
+            var unit = UnitsList.FirstOrDefault(u => u.Name == unitName);
+            var category = CategoriesList.FirstOrDefault(c => c.Name == categoryName);
+
+            // Если не найдены, можно использовать fallback или сообщить об ошибке
+            if (unit == null)
+            {
+                MessageBox.Show($"Единица измерения '{unitName}' не найдена в справочнике.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                unit = UnitsList.FirstOrDefault(); // fallback
+            }
+            if (category == null)
+            {
+                 MessageBox.Show($"Категория '{categoryName}' не найдена в справочнике.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                category = CategoriesList.FirstOrDefault(); // fallback
+            }
+
             var supplyItem = new SupplyImportViewModel
             {
                 Date = DateTime.Today,
                 Name = name,
+                // --- ИСПРАВЛЕНО: Присваиваем объекты, а не строки ---
                 Unit = unit,
+                Category = category,
                 Quantity = quantity,
                 Price = price
             };
-            SupplyDataGrid.Items.Add(supplyItem);
+            // --- ДОБАВЛЕНИЕ В КОЛЛЕКЦИЮ ---
+            ImportedItems.Add(supplyItem);
+            // --- КОНЕЦ ДОБАВЛЕНИЯ ---
         }
     }
 
@@ -64,12 +125,14 @@ public partial class ProductEditor : Window
 
     private void SaveToDatabase(object sender, RoutedEventArgs e)
     {
-        if (SupplyDataGrid.Items.Count == 0)
+        // --- ПРОВЕРКА КОЛЛЕКЦИИ ---
+        if (ImportedItems.Count == 0)
         {
             MessageBox.Show("Нет данных для сохранения.", "Информация",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+        // --- КОНЕЦ ПРОВЕРКИ ---
 
         using var context = new AppDbContext();
         using var transaction = context.Database.BeginTransaction(); // Используем транзакцию
@@ -79,11 +142,10 @@ public partial class ProductEditor : Window
             var productsToSave = new List<Product>();
             var supplyItemsToSave = new List<SupplyItem>();
 
-            for (var i = 0; i < SupplyDataGrid.Items.Count; i++)
+            // --- ИТЕРАЦИЯ ПО КОЛЛЕКЦИИ ---
+            foreach (var item in ImportedItems)
             {
-                var item = SupplyDataGrid.Items[i] as SupplyImportViewModel;
-                if (item == null) continue;
-
+            // --- КОНЕЦ ИТЕРАЦИИ ---
                 // Создаём поставку (пока без Id, он появится после SaveChanges)
                 var supply = new Supply
                 {
@@ -93,7 +155,11 @@ public partial class ProductEditor : Window
                 suppliesToSave.Add(supply);
 
                 // Ищем существующий товар
-                var product = context.Product.FirstOrDefault(x => x.Name == item.Name);
+                var product = context.Product
+                    .Include(p => p.Unit) // Убедимся, что Unit загружен
+                    .Include(p => p.Category) // Убедимся, что Category загружен
+                    .FirstOrDefault(x => x.Name == item.Name);
+
                 if (product != null)
                 {
                     // Обновляем существующий товар
@@ -104,23 +170,17 @@ public partial class ProductEditor : Window
                 }
                 else
                 {
-                    // Создаём новый товар
-                    var unit = context.Unit.Find(1); // Хардкод
-                    if (unit == null)
-                    {
-                        MessageBox.Show("Единица измерения не найдена!", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                        transaction.Rollback(); // Откатываем транзакцию
-                        return;
-                    }
+                    // --- ИСПРАВЛЕНО: Используем объекты из ViewModel (item.Unit, item.Category) ---
+                    // Убедимся, что объекты Unit и Category отслеживаются текущим контекстом
+                    // или получим их из базы по ID, если они были загружены в окне
+                    var unit = context.Unit.Local.FirstOrDefault(u => u.Id == item.Unit.Id) ?? context.Unit.Find(item.Unit.Id);
+                    var category = context.Category.Local.FirstOrDefault(c => c.Id == item.Category.Id) ?? context.Category.Find(item.Category.Id);
 
-                    var categoryId = item.Price < 100 ? 1 : 2; // Логика определения категории
-                    var category = context.Category.Find(categoryId); // Хардкод
-                    if (category == null)
+                    if (unit == null || category == null)
                     {
-                        MessageBox.Show($"Категория с Id {categoryId} не найдена!", "Ошибка",
+                        MessageBox.Show("Ошибка сопоставления единицы измерения или категории при сохранении.", "Ошибка",
                             MessageBoxButton.OK, MessageBoxImage.Error);
-                        transaction.Rollback(); // Откатываем транзакцию
+                        transaction.Rollback();
                         return;
                     }
 
@@ -129,8 +189,10 @@ public partial class ProductEditor : Window
                         Name = item.Name,
                         Price = item.Price,
                         Amount = item.Quantity,
+                        // --- ИСПРАВЛЕНО: Использование найденных объектов из БД ---
                         Unit = unit,
                         Category = category
+                        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
                     };
                     productsToSave.Add(newProduct);
                     product = newProduct; // Обновляем ссылку
@@ -160,6 +222,10 @@ public partial class ProductEditor : Window
             context.SaveChanges();
             transaction.Commit(); // Подтверждаем транзакцию
 
+            // --- ОЧИСТКА КОЛЛЕКЦИИ ПОСЛЕ УСПЕШНОГО СОХРАНЕНИЯ ---
+            ImportedItems.Clear();
+            // --- КОНЕЦ ОЧИСТКИ ---
+
             MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -171,11 +237,23 @@ public partial class ProductEditor : Window
         }
     }
 
+    // --- ОБРАБОТКА КНОПКИ НАЗАД ---
+    private void BackButton_Click(object sender, RoutedEventArgs e)
+    {
+        var adminWindow = new AdminWindow();
+        Hide();
+        adminWindow.Show();
+    }
+    // --- КОНЕЦ ОБРАБОТКИ ---
+
     public class SupplyImportViewModel
     {
         public DateTime Date { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Unit { get; set; } = string.Empty;
+        // --- ИЗМЕНЕНО: Unit и Category теперь объекты, а не строки ---
+        public Unit Unit { get; set; } = null; // Инициализируем null
+        public Category Category { get; set; } = null; // Инициализируем null
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
         public int Quantity { get; set; }
         public int Price { get; set; }
     }

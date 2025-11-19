@@ -45,16 +45,14 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Text="Товар:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+                        <TextBlock Text="Товар:" Grid.Row="0" Grid.Column="0"  VerticalAlignment="Center" />
                         <TextBox x:Name="ProductNameInput" Grid.Row="0" Grid.Column="1" />
-                        <TextBlock Text="Количество:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
-                        <TextBox x:Name="QuantityInput" Grid.Row="1" Grid.Column="1" />
                         <TextBlock Text="Единица измерения:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" />
-                        <ComboBox x:Name="UnitSelector" Grid.Row="2" Grid.Column="1" />
+                        <ComboBox x:Name="UnitSelector" Grid.Row="2" Grid.Column="1" DisplayMemberPath="Name" />
                         <TextBlock Text="Стоимость:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" />
                         <TextBox x:Name="PriceInput" Grid.Row="3" Grid.Column="1" />
                         <TextBlock Text="Категория:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" />
-                        <ComboBox x:Name="CategorySelector" Grid.Row="4" Grid.Column="1" />
+                        <ComboBox x:Name="CategorySelector" Grid.Row="4" Grid.Column="1" DisplayMemberPath="Name" />
                     </Grid>
                     <Button Content="Сохранить товар" Margin="0,10,0,0" Click="SaveProduct" />
                 </StackPanel>
