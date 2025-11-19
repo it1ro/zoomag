@@ -6,7 +6,7 @@ DELETE FROM Supply;
 DELETE FROM Sale;
 DELETE FROM Category;
 DELETE FROM Unit;
-DELETE FROM User;
+DELETE FROM [User]; -- ✅ Теперь работает
 
 -- 2. СБРОС СЧЁТЧИКОВ и ВКЛЮЧЕНИЕ IDENTITY_INSERT
 DBCC CHECKIDENT('Unit', RESEED, 0);
@@ -92,7 +92,10 @@ INSERT INTO SalesProducts (SaleId, ProductId) VALUES
                                                   (5, 19),
                                                   (5, 20);
 
-
-INSERT INTO User (Id, Login, PasswordHash, Role) VALUES
+-- ✅ Добавляем пользователей (Admin и Seller) — с включённым IDENTITY_INSERT
+DBCC CHECKIDENT('User', RESEED, 0);
+SET IDENTITY_INSERT [User] ON;
+INSERT INTO [User] (Id, Login, Password, Role) VALUES
     (1, 'admin', 'admin', 0), -- Admin
     (2, 'seller1', '123', 1); -- Seller
+SET IDENTITY_INSERT [User] OFF;
