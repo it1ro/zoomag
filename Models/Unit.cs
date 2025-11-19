@@ -1,10 +1,7 @@
-﻿using Zoomag.Views;
+﻿namespace Zoomag.Models;
 
-namespace Zoomag.Models
+public class Unit
 {
-    public class Unit
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-    }
+    public int Id { get; set; }
+    public string Name { get; set; }
 }

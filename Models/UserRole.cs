@@ -1,8 +1,7 @@
-namespace Zoomag.Models
+namespace Zoomag.Models;
+
+public enum UserRole
 {
-    public enum UserRole
-    {
-        Admin,
-        Seller
-    }
+    Admin,
+    Seller
 }

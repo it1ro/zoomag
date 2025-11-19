@@ -1,57 +1,53 @@
-using System;
+namespace Zoomag.Views;
+
 using System.Windows;
-using Zoomag.Models;
+using Models;
 
-namespace Zoomag.Views
+public partial class LoginWindow : Window
 {
-    public partial class LoginWindow : Window
+    public LoginWindow()
     {
-        public LoginWindow()
+        InitializeComponent();
+
+        // ✅ Заполняем ComboBox значениями enum
+        RoleComboBox.ItemsSource = Enum.GetValues(typeof(UserRole));
+        RoleComboBox.SelectedIndex = 0; // Admin по умолчанию
+    }
+
+    private void LoginButton_Click(object sender, RoutedEventArgs e)
+    {
+        var login = LoginTextBox.Text;
+
+        // ✅ Получаем выбранную роль как enum
+        if (RoleComboBox.SelectedItem is UserRole selectedRole)
         {
-            InitializeComponent();
+            var password = PasswordBox.Password;
 
-            // ✅ Заполняем ComboBox значениями enum
-            RoleComboBox.ItemsSource = Enum.GetValues(typeof(UserRole));
-            RoleComboBox.SelectedIndex = 0; // Admin по умолчанию
-        }
-
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
-        {
-            var login = LoginTextBox.Text;
-
-            // ✅ Получаем выбранную роль как enum
-            if (RoleComboBox.SelectedItem is UserRole selectedRole)
+            if (IsValidUser(login, password, selectedRole))
             {
-                var password = PasswordBox.Password;
+                // ✅ Используем enum для определения окна
+                Window mainWindow = selectedRole == UserRole.Admin ? new AdminWindow() : new SellerWindow();
 
-                if (IsValidUser(login, password, selectedRole))
-                {
-                    // ✅ Используем enum для определения окна
-                    Window mainWindow = selectedRole == UserRole.Admin ?
-                        new AdminWindow() :
-                        new SellerWindow();
-
-                    mainWindow.Show();
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show("Введен не верный логин или пароль.", "Неверные данные для входа", MessageBoxButton.OK);
-                    PasswordBox.Clear();
-                }
+                mainWindow.Show();
+                Close();
             }
             else
             {
-                MessageBox.Show("Выберите роль", "Роль не выбрана", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Введен не верный логин или пароль.", "Неверные данные для входа", MessageBoxButton.OK);
+                PasswordBox.Clear();
             }
         }
-
-        private bool IsValidUser(string login, string password, UserRole role)
+        else
         {
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
-                return false;
-
-            return (role == UserRole.Admin && password == "admin") || ( role == UserRole.Seller && password == "123");
+            MessageBox.Show("Выберите роль", "Роль не выбрана", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    private bool IsValidUser(string login, string password, UserRole role)
+    {
+        if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+            return false;
+
+        return (role == UserRole.Admin && password == "admin") || (role == UserRole.Seller && password == "123");
     }
 }

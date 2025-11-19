@@ -1,73 +1,73 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="ClosedXML" Version="0.105.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ClosedXML" Version="0.105.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Page Update="Views\ProductEditor.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Reports\AdminReportsWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Reports\ZeroStockReportWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Reports\IncomingGoodsJournalWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\SaleWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\AdminWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\ProductOverviewWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Reports\CategoryReportWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Reports\DailyGoodsReceiptReportWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
+    <ItemGroup>
+        <Page Update="Views\ProductEditor.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Reports\AdminReportsWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Reports\ZeroStockReportWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Reports\IncomingGoodsJournalWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\SaleWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\AdminWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\ProductOverviewWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Reports\CategoryReportWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Reports\DailyGoodsReceiptReportWindow.xaml">
+            <Generator>MSBuild:Compile</Generator>
+            <XamlRuntime>Wpf</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+    </ItemGroup>
 
 </Project>

@@ -10,6 +10,6 @@
             <Button x:Name="ExportToExcelButton" Content="Вывод в Excel" Click="ExportToExcel" />
             <Button x:Name="BackButton" Content="Назад" Click="GoToAdmin" />
         </StackPanel>
-        <DataGrid x:Name="PriceListGrid" AutoGenerateColumns="False"/>
+        <DataGrid x:Name="PriceListGrid" AutoGenerateColumns="False" />
     </DockPanel>
 </Window>

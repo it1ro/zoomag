@@ -1,7 +1,6 @@
-using System.Windows;
-
-
 namespace Zoomag.Views;
+
+using System.Windows;
 
 public partial class SellerWindow : Window
 {
@@ -14,7 +13,6 @@ public partial class SellerWindow : Window
     {
         var saleWindow = new SaleWindow();
         saleWindow.Show();
-
     }
 
     private void ShowStock(object sender, RoutedEventArgs e)
@@ -28,6 +26,4 @@ public partial class SellerWindow : Window
         var productOverviewWindow = new ProductOverviewWindow();
         productOverviewWindow.Show();
     }
-
-
 }

@@ -1,14 +1,10 @@
-﻿using System.Configuration;
-using System.Data;
+﻿namespace Zoomag;
+
 using System.Windows;
 
-namespace Zoomag
+/// <summary>
+///     Interaction logic for App.xaml
+/// </summary>
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
-    {
-    }
-
 }

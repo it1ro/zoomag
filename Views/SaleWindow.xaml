@@ -3,8 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2009"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
         Title="Продажа товаров"
         Height="700"
@@ -15,12 +13,12 @@
         WindowStartupLocation="CenterScreen">
     <Grid Margin="15">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>        <!-- Заголовок -->
-            <RowDefinition Height="Auto"/>        <!-- Поиск и фильтры -->
-            <RowDefinition Height="*"/>           <!-- Таблица товаров -->
-            <RowDefinition Height="Auto"/>        <!-- Информация о чеке -->
-            <RowDefinition Height="Auto"/>        <!-- Таблица чека -->
-            <RowDefinition Height="Auto"/>        <!-- Кнопки управления -->
+            <RowDefinition Height="Auto" />        <!-- Заголовок -->
+            <RowDefinition Height="Auto" />        <!-- Поиск и фильтры -->
+            <RowDefinition Height="*" />           <!-- Таблица товаров -->
+            <RowDefinition Height="Auto" />        <!-- Информация о чеке -->
+            <RowDefinition Height="Auto" />        <!-- Таблица чека -->
+            <RowDefinition Height="Auto" />        <!-- Кнопки управления -->
         </Grid.RowDefinitions>
 
         <!-- Заголовок -->
@@ -28,7 +26,7 @@
                    Text="Продажа товаров"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"
-                   Margin="0,0,0,15"/>
+                   Margin="0,0,0,15" />
 
         <!-- Поиск и фильтры -->
         <Border Grid.Row="1"
@@ -37,19 +35,19 @@
                 Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="Поиск товара:"
                                VerticalAlignment="Center"
-                               Margin="0,0,5,0"/>
+                               Margin="0,0,5,0" />
                     <TextBox x:Name="SearchInput"
                              MinWidth="55"
                              VerticalContentAlignment="Center"
                              Margin="4,0,10,0"
-                             TextChanged="SearchInput_TextChanged"/>
+                             TextChanged="SearchInput_TextChanged" />
                 </StackPanel>
                 <Button Grid.Column="1"
                         x:Name="RefreshButton"
@@ -73,19 +71,19 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Наименование"
                                     Binding="{Binding Name}"
-                                    Width="*"/>
+                                    Width="*" />
                 <DataGridTextColumn Header="Категория"
                                     Binding="{Binding CategoryName}"
-                                    Width="120"/>
+                                    Width="120" />
                 <DataGridTextColumn Header="Ед. изм."
                                     Binding="{Binding UnitName}"
-                                    Width="80"/>
+                                    Width="80" />
                 <DataGridTextColumn Header="Цена"
                                     Binding="{Binding Price, StringFormat={}{0:F0}}"
-                                    Width="100"/>
+                                    Width="100" />
                 <DataGridTextColumn Header="Остаток"
                                     Binding="{Binding Qty}"
-                                    Width="80"/>
+                                    Width="80" />
             </DataGrid.Columns>
         </DataGrid>
 
@@ -96,30 +94,30 @@
                 Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="Товаров в чеке:"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Margin="0,0,10,0"/>
+                               Margin="0,0,10,0" />
                     <TextBlock x:Name="ItemCountDisplay"
                                FontWeight="Bold"
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0">
                     <TextBlock Text="Общая сумма:"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Margin="0,0,10,0"/>
+                               Margin="0,0,10,0" />
                     <TextBlock x:Name="TotalAmountDisplay"
                                FontWeight="Bold"
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center" />
                     <TextBlock Text="руб."
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center" />
                 </StackPanel>
                 <Button Grid.Column="2"
                         x:Name="ClearReceiptButton"
@@ -133,7 +131,7 @@
                         Click="AddSelectedProductToReceipt"
                         Height="35"
                         Background="#28a745"
-                        Foreground="White"/>
+                        Foreground="White" />
             </Grid>
         </Border>
 
@@ -149,16 +147,16 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Наименование"
                                     Binding="{Binding Name}"
-                                    Width="*"/>
+                                    Width="*" />
                 <DataGridTextColumn Header="Цена"
                                     Binding="{Binding Price, StringFormat={}{0:F0}}"
-                                    Width="100"/>
+                                    Width="100" />
                 <DataGridTextColumn Header="Кол-во"
                                     Binding="{Binding Quantity}"
-                                    Width="80"/>
+                                    Width="80" />
                 <DataGridTextColumn Header="Сумма"
                                     Binding="{Binding Total, StringFormat={}{0:F0}}"
-                                    Width="100"/>
+                                    Width="100" />
                 <DataGridTemplateColumn Header="Действия" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

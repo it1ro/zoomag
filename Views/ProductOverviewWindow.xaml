@@ -3,77 +3,76 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
         Title="ProductOverviewWindow" Height="450" Width="1010">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
         <!-- Таблица: Список товаров по имени -->
-        <DataGrid x:Name="ProductNameGrid" 
-                  AutoGenerateColumns="False" 
-                  ItemsSource="{Binding Product}" 
-                  Grid.Column="0" 
-                  Grid.Row="0" 
-                  Grid.ColumnSpan="2" 
+        <DataGrid x:Name="ProductNameGrid"
+                  AutoGenerateColumns="False"
+                  ItemsSource="{Binding Product}"
+                  Grid.Column="0"
+                  Grid.Row="0"
+                  Grid.ColumnSpan="2"
                   Grid.RowSpan="4">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" 
-                                    Binding="{Binding Path=Name}" 
-                                    Width="200"></DataGridTextColumn>
-                <DataGridTextColumn Header="Цена" 
-                                    Binding="{Binding Path=Price}" 
-                                    Width="200"></DataGridTextColumn>
+                <DataGridTextColumn Header="Наименование"
+                                    Binding="{Binding Path=Name}"
+                                    Width="200" />
+                <DataGridTextColumn Header="Цена"
+                                    Binding="{Binding Path=Price}"
+                                    Width="200" />
             </DataGrid.Columns>
         </DataGrid>
         <!-- Таблица: Детали товаров -->
-        <DataGrid x:Name="ProductDetailsGrid" 
-                  AutoGenerateColumns="False" 
-                  ItemsSource="{Binding Product}" 
-                  Grid.Column="3" 
-                  Grid.Row="0" 
-                  Grid.ColumnSpan="2" 
+        <DataGrid x:Name="ProductDetailsGrid"
+                  AutoGenerateColumns="False"
+                  ItemsSource="{Binding Product}"
+                  Grid.Column="3"
+                  Grid.Row="0"
+                  Grid.ColumnSpan="2"
                   Grid.RowSpan="4">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Название" 
-                                    Binding="{Binding Path=Name}" 
-                                    Width="200"></DataGridTextColumn>
-                <DataGridTextColumn Header="Ед/изм" 
-                                    Binding="{Binding Path=Unit.Name}" 
-                                    Width="200"></DataGridTextColumn>
-                <DataGridTextColumn Header="Категория" 
-                                    Binding="{Binding Path=Category.Name}" 
-                                    Width="200"></DataGridTextColumn>
-                <DataGridTextColumn Header="Цена" 
-                                    Binding="{Binding Path=Price}" 
-                                    Width="200"></DataGridTextColumn>
-                <DataGridTextColumn Header="Количество" 
-                                    Binding="{Binding Path=Qty}" 
-                                    Width="200"></DataGridTextColumn>
+                <DataGridTextColumn Header="Название"
+                                    Binding="{Binding Path=Name}"
+                                    Width="200" />
+                <DataGridTextColumn Header="Ед/изм"
+                                    Binding="{Binding Path=Unit.Name}"
+                                    Width="200" />
+                <DataGridTextColumn Header="Категория"
+                                    Binding="{Binding Path=Category.Name}"
+                                    Width="200" />
+                <DataGridTextColumn Header="Цена"
+                                    Binding="{Binding Path=Price}"
+                                    Width="200" />
+                <DataGridTextColumn Header="Количество"
+                                    Binding="{Binding Path=Qty}"
+                                    Width="200" />
             </DataGrid.Columns>
         </DataGrid>
-        <Button Grid.Row="2" 
-                Grid.Column="2" 
-                x:Name="BackButton" 
-                Content="Назад" 
-                Grid.RowSpan="2" 
-                Click="GoToAdmin" ></Button>
-        <Button Grid.Row="0" 
-                Grid.Column="2" 
-                x:Name="LoadDetailsButton" 
-                Content="Заполнить таблицу" 
-                Grid.RowSpan="2" 
-                Click="LoadProductDetails"/>
+        <Button Grid.Row="2"
+                Grid.Column="2"
+                x:Name="BackButton"
+                Content="Назад"
+                Grid.RowSpan="2"
+                Click="GoToAdmin" />
+        <Button Grid.Row="0"
+                Grid.Column="2"
+                x:Name="LoadDetailsButton"
+                Content="Заполнить таблицу"
+                Grid.RowSpan="2"
+                Click="LoadProductDetails" />
     </Grid>
 </Window>

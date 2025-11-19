@@ -4,54 +4,58 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2009"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        xmlns:local="clr-namespace:Zoomag"
         mc:Ignorable="d"
         Title="Отчет о поступлении товаров за день" Height="650" Width="1100"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="Отчет о поступлении товаров за день" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+        <TextBlock Grid.Row="0" Text="Отчет о поступлении товаров за день" FontWeight="Bold"
+                   HorizontalAlignment="Center" Margin="0,0,0,15" />
         <Border Grid.Row="1" CornerRadius="4" Padding="10" Margin="0,0,0,15">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Дата поступления" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <DatePicker Grid.Column="1" x:Name="DeliveryDatePicker" SelectedDate="{x:Static sys:DateTime.Today}" Margin="0,0,10,0"/>
-                <Button Grid.Column="2" x:Name="GenerateReportButton" Content="Сформировать отчет" Click="GenerateReport"/>
+                <TextBlock Grid.Column="0" Text="Дата поступления" VerticalAlignment="Center" Margin="0,0,5,0" />
+                <DatePicker Grid.Column="1" x:Name="DeliveryDatePicker" SelectedDate="{x:Static sys:DateTime.Today}"
+                            Margin="0,0,10,0" />
+                <Button Grid.Column="2" x:Name="GenerateReportButton" Content="Сформировать отчет"
+                        Click="GenerateReport" />
                 <Button Grid.Column="3" x:Name="ResetFilterButton" Content="Сбросить" Click="ResetFilter" />
             </Grid>
         </Border>
         <Grid Grid.Row="2" Margin="0,0,0,15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" CornerRadius="4" Padding="15" Margin="0,0,5,0">
                 <StackPanel>
-                    <TextBlock Text="Общая сумма" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="TotalAmountDisplay" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
-                    <TextBlock Text="рублей" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Общая сумма" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TotalAmountDisplay" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5" />
+                    <TextBlock Text="рублей" HorizontalAlignment="Center" />
                 </StackPanel>
             </Border>
             <Border Grid.Column="1" CornerRadius="4" Padding="15" Margin="5,0,0,0">
                 <StackPanel>
-                    <TextBlock Text="Количество товаров" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="TotalQuantityDisplay" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
-                    <TextBlock Text="единиц" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Количество товаров" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TotalQuantityDisplay" FontWeight="Bold" HorizontalAlignment="Center"
+                               Margin="0,5" />
+                    <TextBlock Text="единиц" HorizontalAlignment="Center" />
                 </StackPanel>
             </Border>
         </Grid>
-        <DataGrid x:Name="ReportDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"/>
+        <DataGrid x:Name="ReportDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserAddRows="False" />
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button x:Name="BackToMainMenuButton" Content="Назад в главное меню" Click="BackToMainMenu" />
         </StackPanel>
