@@ -9,9 +9,9 @@
         MinHeight="500" MinWidth="800">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Кнопки импорта/сохранения -->
-            <RowDefinition Height="*"/>    <!-- Таблица данных -->
-            <RowDefinition Height="Auto"/> <!-- Кнопка назад -->
+            <RowDefinition Height="Auto" /> <!-- Кнопки импорта/сохранения -->
+            <RowDefinition Height="*" />    <!-- Таблица данных -->
+            <RowDefinition Height="Auto" /> <!-- Кнопка назад -->
         </Grid.RowDefinitions>
 
         <!-- Панель кнопок -->
@@ -20,13 +20,13 @@
                     Content="Загрузить список товаров"
                     Click="ImportFromExcel"
                     Margin="0,0,10,0"
-                    Height="35"/>
+                    Height="35" />
             <Button x:Name="SaveButton"
                     Content="Запись в БД"
                     Click="SaveToDatabase"
                     Height="35"
                     Background="LightGreen"
-                    FontWeight="SemiBold"/>
+                    FontWeight="SemiBold" />
         </StackPanel>
 
         <!-- Таблица поставок -->
@@ -34,7 +34,7 @@
                   Grid.Row="1"
                   AutoGenerateColumns="False"
                   ItemsSource="{Binding ImportedItems}"
-                  CanUserAddRows="True"  
+                  CanUserAddRows="True"
                   HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal"
                   SelectionUnit="FullRow"
@@ -47,24 +47,35 @@
                                     Binding="{Binding Path=Name}"
                                     Width="Auto" MinWidth="150" />
                 <!-- Выпадающий список для Единицы измерения -->
-                <DataGridTemplateColumn Header="Ед/изм"
-                                        Width="Auto" MinWidth="80">
+                <DataGridTemplateColumn Header="Ед/изм" Width="Auto" MinWidth="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.UnitsList}"
-                                      SelectedItem="{Binding Path=Unit, Mode=OneTime}"  
-                                      DisplayMemberPath="Name" />
+                            <ComboBox
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.UnitsList}"
+                                SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}" 
+                                SelectedValuePath="Id" 
+                                DisplayMemberPath="Name" /> <!-- Отображает Name -->
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.UnitsList}"
+                                SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}"
+                                SelectedValuePath="Id"
+                                DisplayMemberPath="Name" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
                 <!-- Выпадающий список для Категории -->
-                <DataGridTemplateColumn Header="Категория"
-                                        Width="Auto" MinWidth="100">
+                <DataGridTemplateColumn Header="Категория" Width="Auto" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.CategoriesList}"
-                                      SelectedItem="{Binding Path=Category, Mode=OneTime}" 
-                                      DisplayMemberPath="Name" />
+                            <ComboBox
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.CategoriesList}"
+                                SelectedValue="{Binding Path=Category.Id, Mode=TwoWay}"
+                                SelectedValuePath="Id"
+                                DisplayMemberPath="Name" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -84,6 +95,6 @@
                 Click="BackButton_Click"
                 HorizontalAlignment="Right"
                 Height="35"
-                Padding="20,5"/>
+                Padding="20,5" />
     </Grid>
 </Window>

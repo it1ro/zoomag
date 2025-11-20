@@ -1,23 +1,17 @@
 ﻿namespace Zoomag.Views;
 
-using System.Collections.ObjectModel; // Добавлено
+using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Controls; // Добавлено для кнопок, если нужно
 using ClosedXML.Excel;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using Models;
+// Добавлено
+// Добавлено для кнопок, если нужно
 
 public partial class SupplyWindow : Window
 {
-    // --- НОВЫЕ СВОЙСТВА ДЛЯ ComboBox ---
-    public ObservableCollection<Unit> UnitsList { get; set; } = new();
-    public ObservableCollection<Category> CategoriesList { get; set; } = new();
-    // --- КОНЕЦ НОВЫХ СВОЙСТВ ---
-
-    // --- НОВОЕ СВОЙСТВО ---
-    public ObservableCollection<SupplyImportViewModel> ImportedItems { get; set; } = new();
     // --- КОНЕЦ НОВОГО СВОЙСТВА ---
 
     public SupplyWindow()
@@ -29,6 +23,15 @@ public partial class SupplyWindow : Window
         // --- КОНЕЦ УСТАНОВКИ DataContext ---
     }
 
+    // --- НОВЫЕ СВОЙСТВА ДЛЯ ComboBox ---
+    public ObservableCollection<Unit> UnitsList { get; set; } = new();
+
+    public ObservableCollection<Category> CategoriesList { get; set; } = new();
+    // --- КОНЕЦ НОВЫХ СВОЙСТВ ---
+
+    // --- НОВОЕ СВОЙСТВО ---
+    public ObservableCollection<SupplyImportViewModel> ImportedItems { get; set; } = new();
+
     // --- НОВЫЙ МЕТОД ЗАГРУЗКИ СПРАВОЧНИКОВ ---
     private void LoadReferenceData()
     {
@@ -36,14 +39,8 @@ public partial class SupplyWindow : Window
         UnitsList.Clear();
         CategoriesList.Clear();
 
-        foreach (var unit in context.Unit.ToList())
-        {
-            UnitsList.Add(unit);
-        }
-        foreach (var category in context.Category.ToList())
-        {
-            CategoriesList.Add(category);
-        }
+        foreach (var unit in context.Unit.ToList()) UnitsList.Add(unit);
+        foreach (var category in context.Category.ToList()) CategoriesList.Add(category);
     }
     // --- КОНЕЦ МЕТОДА ---
 
@@ -65,14 +62,12 @@ public partial class SupplyWindow : Window
             return;
         }
 
-        // --- ОЧИСТКА ПРЕДЫДУЩИХ ДАННЫХ ---
         ImportedItems.Clear();
-        // --- КОНЕЦ ОЧИСТКИ ---
 
         for (var row = 2; row <= lastRow; row++)
         {
             var name = ReadCell(worksheet, row, 1);
-            var unitName = ReadCell(worksheet, row, 2); // Теперь это имя
+            var unitIdStr = ReadCell(worksheet, row, 2); // Теперь это ID
             var categoryName = ReadCell(worksheet, row, 5); // Предполагаем, что категория в 5-й колонке
             var quantityStr = ReadCell(worksheet, row, 3);
             var priceStr = ReadCell(worksheet, row, 4);
@@ -84,20 +79,29 @@ public partial class SupplyWindow : Window
                 continue;
             }
 
-            // Найти объекты Unit и Category по имени
-            var unit = UnitsList.FirstOrDefault(u => u.Name == unitName);
+            // Попытка преобразовать ID из строки
+            if (!int.TryParse(unitIdStr, out var unitId))
+            {
+                MessageBox.Show($"Неверный формат ID единицы измерения в строке {row}.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                continue;
+            }
+
+            // Найти объект Unit по ID
+            var unit = UnitsList.FirstOrDefault(u => u.Id == unitId);
+            // Найти объект Category по имени (или можно изменить на ID, если в файле тоже ID категории)
             var category = CategoriesList.FirstOrDefault(c => c.Name == categoryName);
 
-            // Если не найдены, можно использовать fallback или сообщить об ошибке
             if (unit == null)
             {
-                MessageBox.Show($"Единица измерения '{unitName}' не найдена в справочнике.", "Ошибка",
+                MessageBox.Show($"Единица измерения с ID '{unitId}' не найдена в справочнике.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 unit = UnitsList.FirstOrDefault(); // fallback
             }
+
             if (category == null)
             {
-                 MessageBox.Show($"Категория '{categoryName}' не найдена в справочнике.", "Ошибка",
+                MessageBox.Show($"Категория '{categoryName}' не найдена в справочнике.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 category = CategoriesList.FirstOrDefault(); // fallback
             }
@@ -106,15 +110,12 @@ public partial class SupplyWindow : Window
             {
                 Date = DateTime.Today,
                 Name = name,
-                // --- ИСПРАВЛЕНО: Присваиваем объекты, а не строки ---
-                Unit = unit,
+                Unit = unit, // Присваиваем найденный объект Unit
                 Category = category,
                 Quantity = quantity,
                 Price = price
             };
-            // --- ДОБАВЛЕНИЕ В КОЛЛЕКЦИЮ ---
             ImportedItems.Add(supplyItem);
-            // --- КОНЕЦ ДОБАВЛЕНИЯ ---
         }
     }
 
@@ -145,7 +146,7 @@ public partial class SupplyWindow : Window
             // --- ИТЕРАЦИЯ ПО КОЛЛЕКЦИИ ---
             foreach (var item in ImportedItems)
             {
-            // --- КОНЕЦ ИТЕРАЦИИ ---
+                // --- КОНЕЦ ИТЕРАЦИИ ---
                 // Создаём поставку (пока без Id, он появится после SaveChanges)
                 var supply = new Supply
                 {
@@ -173,12 +174,15 @@ public partial class SupplyWindow : Window
                     // --- ИСПРАВЛЕНО: Используем объекты из ViewModel (item.Unit, item.Category) ---
                     // Убедимся, что объекты Unit и Category отслеживаются текущим контекстом
                     // или получим их из базы по ID, если они были загружены в окне
-                    var unit = context.Unit.Local.FirstOrDefault(u => u.Id == item.Unit.Id) ?? context.Unit.Find(item.Unit.Id);
-                    var category = context.Category.Local.FirstOrDefault(c => c.Id == item.Category.Id) ?? context.Category.Find(item.Category.Id);
+                    var unit = context.Unit.Local.FirstOrDefault(u => u.Id == item.Unit.Id) ??
+                               context.Unit.Find(item.Unit.Id);
+                    var category = context.Category.Local.FirstOrDefault(c => c.Id == item.Category.Id) ??
+                                   context.Category.Find(item.Category.Id);
 
                     if (unit == null || category == null)
                     {
-                        MessageBox.Show("Ошибка сопоставления единицы измерения или категории при сохранении.", "Ошибка",
+                        MessageBox.Show("Ошибка сопоставления единицы измерения или категории при сохранении.",
+                            "Ошибка",
                             MessageBoxButton.OK, MessageBoxImage.Error);
                         transaction.Rollback();
                         return;
@@ -249,10 +253,14 @@ public partial class SupplyWindow : Window
     public class SupplyImportViewModel
     {
         public DateTime Date { get; set; }
+
         public string Name { get; set; } = string.Empty;
+
         // --- ИЗМЕНЕНО: Unit и Category теперь объекты, а не строки ---
-        public Unit Unit { get; set; } = null; // Инициализируем null
-        public Category Category { get; set; } = null; // Инициализируем null
+        public Unit Unit { get; set; } // Инициализируем null
+
+        public Category Category { get; set; } // Инициализируем null
+
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
         public int Quantity { get; set; }
         public int Price { get; set; }
