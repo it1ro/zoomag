@@ -45,80 +45,85 @@ public partial class SupplyWindow : Window
     // --- КОНЕЦ МЕТОДА ---
 
     private void ImportFromExcel(object sender, RoutedEventArgs e)
+{
+    var openDialog = new OpenFileDialog
     {
-        var openDialog = new OpenFileDialog
-        {
-            Filter = "Файлы Excel|*.xlsx;*.xls;*.xlsm|Все файлы|*.*"
-        };
-        if (openDialog.ShowDialog() != true) return;
+        Filter = "Файлы Excel|*.xlsx;*.xls;*.xlsm|Все файлы|*.*"
+    };
+    if (openDialog.ShowDialog() != true) return;
 
-        using var workbook = new XLWorkbook(openDialog.FileName);
-        var worksheet = workbook.Worksheets.Worksheet(1);
-        var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
-        if (lastRow < 2)
-        {
-            MessageBox.Show("Файл не содержит данных для импорта.", "Информация",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        ImportedItems.Clear();
-
-        for (var row = 2; row <= lastRow; row++)
-        {
-            var name = ReadCell(worksheet, row, 1);
-            var unitIdStr = ReadCell(worksheet, row, 2); // Теперь это ID
-            var categoryName = ReadCell(worksheet, row, 5); // Предполагаем, что категория в 5-й колонке
-            var quantityStr = ReadCell(worksheet, row, 3);
-            var priceStr = ReadCell(worksheet, row, 4);
-
-            if (!int.TryParse(quantityStr, out var quantity) || !int.TryParse(priceStr, out var price))
-            {
-                MessageBox.Show($"Неверный формат данных в строке {row}.", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                continue;
-            }
-
-            // Попытка преобразовать ID из строки
-            if (!int.TryParse(unitIdStr, out var unitId))
-            {
-                MessageBox.Show($"Неверный формат ID единицы измерения в строке {row}.", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                continue;
-            }
-
-            // Найти объект Unit по ID
-            var unit = UnitsList.FirstOrDefault(u => u.Id == unitId);
-            // Найти объект Category по имени (или можно изменить на ID, если в файле тоже ID категории)
-            var category = CategoriesList.FirstOrDefault(c => c.Name == categoryName);
-
-            if (unit == null)
-            {
-                MessageBox.Show($"Единица измерения с ID '{unitId}' не найдена в справочнике.", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                unit = UnitsList.FirstOrDefault(); // fallback
-            }
-
-            if (category == null)
-            {
-                MessageBox.Show($"Категория '{categoryName}' не найдена в справочнике.", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                category = CategoriesList.FirstOrDefault(); // fallback
-            }
-
-            var supplyItem = new SupplyImportViewModel
-            {
-                Date = DateTime.Today,
-                Name = name,
-                Unit = unit, // Присваиваем найденный объект Unit
-                Category = category,
-                Quantity = quantity,
-                Price = price
-            };
-            ImportedItems.Add(supplyItem);
-        }
+    using var workbook = new XLWorkbook(openDialog.FileName);
+    var worksheet = workbook.Worksheets.Worksheet(1);
+    var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+    if (lastRow < 2)
+    {
+        MessageBox.Show("Файл не содержит данных для импорта.", "Информация",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+        return;
     }
 
+    ImportedItems.Clear();
+
+    for (var row = 2; row <= lastRow; row++)
+    {
+        var name = ReadCell(worksheet, row, 1);
+        var unitIdStr = ReadCell(worksheet, row, 2); // Это ID единицы измерения
+        var categoryName = ReadCell(worksheet, row, 5); // Это название категории (может быть пустым)
+        var quantityStr = ReadCell(worksheet, row, 3);
+        var priceStr = ReadCell(worksheet, row, 4);
+
+        if (!int.TryParse(quantityStr, out var quantity) || !int.TryParse(priceStr, out var price))
+        {
+            MessageBox.Show($"Неверный формат данных в строке {row}.", "Ошибка",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            continue;
+        }
+
+        // Попытка преобразовать ID единицы измерения из строки
+        if (!int.TryParse(unitIdStr, out var unitId))
+        {
+            MessageBox.Show($"Неверный формат ID единицы измерения в строке {row}.", "Ошибка",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            continue;
+        }
+
+        // Найти объект Unit по ID
+        var unit = UnitsList.FirstOrDefault(u => u.Id == unitId);
+        if (unit == null)
+        {
+            MessageBox.Show($"Единица измерения с ID '{unitId}' не найдена в справочнике.", "Ошибка",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            unit = UnitsList.FirstOrDefault(); // fallback, если не найдена
+            if (unit == null) continue; // Если и fallback не сработал, пропускаем строку
+        }
+
+        // Найти объект Category по имени, если имя не пустое
+        Category category = null;
+        if (!string.IsNullOrWhiteSpace(categoryName)) // Проверяем, что имя категории не пустое
+        {
+            category = CategoriesList.FirstOrDefault(c => c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
+            // Убираем сообщение об ошибке, если категория не найдена
+            // if (category == null)
+            // {
+            //      MessageBox.Show($"Категория '{categoryName}' не найдена в справочнике.", "Ошибка",
+            //         MessageBoxButton.OK, MessageBoxImage.Warning);
+            //     category = CategoriesList.FirstOrDefault(); // fallback
+            // }
+        }
+        // Если categoryName пустое или категория не найдена, category останется null
+
+        var supplyItem = new SupplyImportViewModel
+        {
+            Date = DateTime.Today,
+            Name = name,
+            Unit = unit, // Присваиваем найденный объект Unit
+            Category = category, // Присваиваем найденный объект Category или null
+            Quantity = quantity,
+            Price = price
+        };
+        ImportedItems.Add(supplyItem);
+    }
+}
     private string ReadCell(IXLWorksheet worksheet, int row, int column)
     {
         return worksheet.Cell(row, column).IsEmpty() ? string.Empty : worksheet.Cell(row, column).GetString();
