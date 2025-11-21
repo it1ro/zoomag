@@ -129,122 +129,138 @@ public partial class SupplyWindow : Window
         return worksheet.Cell(row, column).IsEmpty() ? string.Empty : worksheet.Cell(row, column).GetString();
     }
 
-    private void SaveToDatabase(object sender, RoutedEventArgs e)
+    private async void SaveToDatabase(object sender, RoutedEventArgs e)
+{
+    // --- ПРОВЕРКА КОЛЛЕКЦИИ ---
+    if (ImportedItems.Count == 0)
     {
-        // --- ПРОВЕРКА КОЛЛЕКЦИИ ---
-        if (ImportedItems.Count == 0)
-        {
-            MessageBox.Show("Нет данных для сохранения.", "Информация",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        MessageBox.Show("Нет данных для сохранения.", "Информация",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+        return;
+    }
+    // --- КОНЕЦ ПРОВЕРКИ ---
 
-        using var context = new AppDbContext();
-        using var transaction = context.Database.BeginTransaction(); // Используем транзакцию
-        try
-        {
-            var suppliesToSave = new List<Supply>();
-            var productsToSave = new List<Product>();
-            var supplyItemsToSave = new List<SupplyItem>();
+    using var context = new AppDbContext();
+    // 1. Получаем стратегию выполнения от контекста
+    var strategy = context.Database.CreateExecutionStrategy();
 
-            // --- ИТЕРАЦИЯ ПО КОЛЛЕКЦИИ ---
-            foreach (var item in ImportedItems)
+    try
+    {
+        // 2. Выполняем всю операцию (включая транзакцию) через стратегию
+        await strategy.ExecuteAsync(async () =>
+        {
+            using var transaction = context.Database.BeginTransaction(); // Теперь BeginTransaction вызывается внутри стратегии
+
+            try
             {
-                // --- КОНЕЦ ИТЕРАЦИИ ---
-                // Создаём поставку (пока без Id, он появится после SaveChanges)
-                var supply = new Supply
-                {
-                    Date = item.Date,
-                    Name = $"Поставка {item.Name} от {item.Date:dd.MM.yyyy}"
-                };
-                suppliesToSave.Add(supply);
+                var suppliesToSave = new List<Supply>();
+                var productsToSave = new List<Product>();
+                var supplyItemsToSave = new List<SupplyItem>();
 
-                // Ищем существующий товар
-                var product = context.Product
-                    .Include(p => p.Unit) // Убедимся, что Unit загружен
-                    .Include(p => p.Category) // Убедимся, что Category загружен
-                    .FirstOrDefault(x => x.Name == item.Name);
-
-                if (product != null)
+                // --- ИТЕРАЦИЯ ПО КОЛЛЕКЦИИ ---
+                foreach (var item in ImportedItems)
                 {
-                    // Обновляем существующий товар
-                    product.Amount += item.Quantity;
-                    if (product.Price < item.Price)
-                        product.Price = item.Price;
-                    // Объект product уже отслеживается контекстом, изменения будут сохранены
-                }
-                else
-                {
-                    // --- ИСПРАВЛЕНО: Используем объекты из ViewModel (item.Unit, item.Category) ---
-                    // Убедимся, что объекты Unit и Category отслеживаются текущим контекстом
-                    // или получим их из базы по ID, если они были загружены в окне
-                    var unit = context.Unit.Local.FirstOrDefault(u => u.Id == item.Unit.Id) ??
-                               context.Unit.Find(item.Unit.Id);
-                    var category = context.Category.Local.FirstOrDefault(c => c.Id == item.Category.Id) ??
-                                   context.Category.Find(item.Category.Id);
-
-                    if (unit == null || category == null)
+                    // --- КОНЕЦ ИТЕРАЦИИ ---
+                    // Создаём поставку (пока без Id, он появится после SaveChanges)
+                    var supply = new Supply
                     {
-                        MessageBox.Show("Ошибка сопоставления единицы измерения или категории при сохранении.",
-                            "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                        transaction.Rollback();
-                        return;
+                        Date = item.Date,
+                        Name = $"Поставка {item.Name} от {item.Date:dd.MM.yyyy}"
+                    };
+                    suppliesToSave.Add(supply);
+
+                    // Ищем существующий товар *внутри транзакции*
+                    var product = await context.Product
+                        .Include(p => p.Unit) // Убедимся, что Unit загружен
+                        .Include(p => p.Category) // Убедимся, что Category загружен
+                        .FirstOrDefaultAsync(x => x.Name == item.Name); // Используем Async метод
+
+                    if (product != null)
+                    {
+                        // Обновляем существующий товар
+                        product.Amount += item.Quantity;
+                        if (product.Price < item.Price)
+                            product.Price = item.Price;
+                        // Объект product уже отслеживается контекстом, изменения будут сохранены
+                    }
+                    else
+                    {
+                        // --- ИСПРАВЛЕНО: Используем объекты из ViewModel (item.Unit, item.Category) ---
+                        // Убедимся, что объекты Unit и Category отслеживаются текущим контекстом
+                        // или получим их из базы по ID, если они были загружены в окне
+                        var unit = context.Unit.Local.FirstOrDefault(u => u.Id == item.Unit.Id) ?? await context.Unit.FindAsync(item.Unit.Id);
+                        var category = context.Category.Local.FirstOrDefault(c => c.Id == item.Category.Id) ?? await context.Category.FindAsync(item.Category.Id);
+
+                        if (unit == null || category == null)
+                        {
+                            MessageBox.Show("Ошибка сопоставления единицы измерения или категории при сохранении.", "Ошибка",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                            // Вызов Rollback выбросит исключение, которое перехватит стратегия
+                            await transaction.RollbackAsync();
+                            // Бросаем исключение для остановки выполнения внутри стратегии
+                            throw new InvalidOperationException("Не удалось найти Unit или Category для сохранения.");
+                        }
+
+                        var newProduct = new Product
+                        {
+                            Name = item.Name,
+                            Price = item.Price,
+                            Amount = item.Quantity,
+                            // --- ИСПРАВЛЕНО: Использование найденных объектов из БД ---
+                            Unit = unit,
+                            Category = category
+                            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+                        };
+                        productsToSave.Add(newProduct);
+                        product = newProduct; // Обновляем ссылку
                     }
 
-                    var newProduct = new Product
+                    // Создаём элемент поставки (ссылки на supply и product пока не установлены)
+                    var supplyItem = new SupplyItem
                     {
-                        Name = item.Name,
+                        // SupplyId будет установлен после сохранения Supply
+                        // ProductId будет установлен после сохранения Product
+                        Quantity = item.Quantity,
                         Price = item.Price,
-                        Amount = item.Quantity,
-                        // --- ИСПРАВЛЕНО: Использование найденных объектов из БД ---
-                        Unit = unit,
-                        Category = category
-                        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+                        Total = item.Quantity * item.Price // Устанавливаем Total
                     };
-                    productsToSave.Add(newProduct);
-                    product = newProduct; // Обновляем ссылку
+                    // Связываем с объектами в памяти, EF установит Id при SaveChanges
+                    supplyItem.Supply = supply;
+                    supplyItem.Product = product;
+                    supplyItemsToSave.Add(supplyItem);
                 }
 
-                // Создаём элемент поставки (ссылки на supply и product пока не установлены)
-                var supplyItem = new SupplyItem
-                {
-                    // SupplyId будет установлен после сохранения Supply
-                    // ProductId будет установлен после сохранения Product
-                    Quantity = item.Quantity,
-                    Price = item.Price,
-                    Total = item.Quantity * item.Price // Устанавливаем Total
-                };
-                // Связываем с объектами в памяти, EF установит Id при SaveChanges
-                supplyItem.Supply = supply;
-                supplyItem.Product = product;
-                supplyItemsToSave.Add(supplyItem);
+                // Добавляем все сущности в контекст
+                if (suppliesToSave.Any()) context.Supply.AddRange(suppliesToSave);
+                if (productsToSave.Any()) context.Product.AddRange(productsToSave);
+                if (supplyItemsToSave.Any()) context.SupplyItem.AddRange(supplyItemsToSave);
+
+                // Сохраняем все изменения в транзакции
+                await context.SaveChangesAsync(); // Используем Async
+                await transaction.CommitAsync(); // Используем Async
+
+                // --- ОЧИСТКА КОЛЛЕКЦИИ ПОСЛЕ УСПЕШНОГО СОХРАНЕНИЯ ---
+                ImportedItems.Clear();
+                // --- КОНЕЦ ОЧИСТКИ ---
+
+                MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
-
-            // Добавляем все сущности в контекст
-            if (suppliesToSave.Any()) context.Supply.AddRange(suppliesToSave);
-            if (productsToSave.Any()) context.Product.AddRange(productsToSave);
-            if (supplyItemsToSave.Any()) context.SupplyItem.AddRange(supplyItemsToSave);
-
-            // Сохраняем все изменения в транзакции
-            context.SaveChanges();
-            transaction.Commit(); // Подтверждаем транзакцию
-
-            // --- ОЧИСТКА КОЛЛЕКЦИИ ПОСЛЕ УСПЕШНОГО СОХРАНЕНИЯ ---
-            ImportedItems.Clear();
-            // --- КОНЕЦ ОЧИСТКИ ---
-
-            MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        catch (Exception ex)
-        {
-            transaction.Rollback(); // Откатываем транзакцию в случае ошибки
-            MessageBox.Show($"Ошибка при сохранении в базу: {ex.Message}", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(); // Откатываем транзакцию в случае ошибки
+                // Бросаем исключение дальше, чтобы стратегия повтора могла его обработать
+                // или чтобы оно дошло до основного catch в методе, если стратегия не будет повторять
+                throw new InvalidOperationException($"Ошибка при сохранении в базу: {ex.Message}", ex);
+            }
+        });
     }
+    catch (Exception ex) // Этот catch перехватывает исключение, если стратегия исчерпала попытки повтора
+    {
+        MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}", "Ошибка",
+            MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+}
 
     // --- ОБРАБОТКА КНОПКИ НАЗАД ---
     private void BackButton_Click(object sender, RoutedEventArgs e)
