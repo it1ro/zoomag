@@ -17,13 +17,13 @@ public partial class SellerWindow : Window
 
     private void ShowStock(object sender, RoutedEventArgs e)
     {
-        var stockWindow = new ProductOverviewWindow();
+        var stockWindow = new StockWindow();
         stockWindow.Show();
     }
 
     private void ShowProductOverview(object sender, RoutedEventArgs e)
     {
-        var productOverviewWindow = new ProductOverviewWindow();
+        var productOverviewWindow = new StockWindow();
         productOverviewWindow.Show();
     }
 }

@@ -5,13 +5,13 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
-///     Логика взаимодействия для ProductOverviewWindow.xaml
+///     Логика взаимодействия для StockWindow.xaml
 /// </summary>
-public partial class ProductOverviewWindow : Window
+public partial class StockWindow : Window
 {
     private readonly AppDbContext _context;
 
-    public ProductOverviewWindow()
+    public StockWindow()
     {
         InitializeComponent();
         _context = new AppDbContext();

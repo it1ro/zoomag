@@ -1,4 +1,4 @@
-﻿<Window x:Class="Zoomag.Views.SupplyWindow"
+﻿<Window x:Class="Zoomag.Views.ArrivalWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -51,7 +51,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox
-                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.UnitsList}"
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.UnitsList}"
                                 SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}" 
                                 SelectedValuePath="Id" 
                                 DisplayMemberPath="Name" /> <!-- Отображает Name -->
@@ -60,7 +60,7 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <ComboBox
-                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.UnitsList}"
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.UnitsList}"
                                 SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}"
                                 SelectedValuePath="Id"
                                 DisplayMemberPath="Name" />
@@ -72,7 +72,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox
-                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:SupplyWindow}, Path=DataContext.CategoriesList}"
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.CategoriesList}"
                                 SelectedValue="{Binding Path=Category.Id, Mode=TwoWay}"
                                 SelectedValuePath="Id"
                                 DisplayMemberPath="Name" />

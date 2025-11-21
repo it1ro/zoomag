@@ -198,7 +198,7 @@ private void SaveProduct(object sender, RoutedEventArgs e)
 
     private void ShowArrival(object sender, RoutedEventArgs e)
     {
-        var arrivalWindow = new SupplyWindow();
+        var arrivalWindow = new ArrivalWindow();
         Hide();
         arrivalWindow.Show();
     }
@@ -212,7 +212,7 @@ private void SaveProduct(object sender, RoutedEventArgs e)
 
     private void ShowStock(object sender, RoutedEventArgs e)
     {
-        var stockWindow = new ProductOverviewWindow();
+        var stockWindow = new StockWindow();
         Hide();
         stockWindow.Show();
     }

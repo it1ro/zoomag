@@ -10,11 +10,11 @@ using Models;
 // Добавлено
 // Добавлено для кнопок, если нужно
 
-public partial class SupplyWindow : Window
+public partial class ArrivalWindow : Window
 {
     // --- КОНЕЦ НОВОГО СВОЙСТВА ---
 
-    public SupplyWindow()
+    public ArrivalWindow()
     {
         InitializeComponent();
         LoadReferenceData(); // Загружаем справочники

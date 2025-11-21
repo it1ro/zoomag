@@ -130,7 +130,6 @@
                         Content="Добавить в чек"
                         Click="AddSelectedProductToReceipt"
                         Height="35"
-                        Background="#28a745"
                         Foreground="White" />
             </Grid>
         </Border>
@@ -176,13 +175,13 @@
                     HorizontalAlignment="Right"
                     Margin="0,10,0,0">
             <Button x:Name="FinalizeSaleButton"
-                    Content="Купить"
+                    Content="Оформить продажу"
                     Click="FinalizeCurrentSale"
                     Height="45"
                     Padding="30,10"
                     Margin="0,0,10,0" />
             <Button x:Name="BackToMainMenuButton"
-                    Content="Назад в главное меню"
+                    Content="Назад"
                     Click="ReturnToMainMenu"
                     Height="45"
                     Padding="30,10" />
