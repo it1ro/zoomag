@@ -10,12 +10,25 @@ namespace Zoomag.Views;
 
 public partial class ArrivalWindow : Window
 {
+    public ObservableCollection<Category> AllCategories { get; set; } = new();
+    public ObservableCollection<Unit> AllUnits { get; set; } = new();
     public ObservableCollection<SupplyImportViewModel> ImportedItems { get; set; } = new();
 
     public ArrivalWindow()
     {
         InitializeComponent();
+        LoadReferenceData();
         DataContext = this;
+    }
+
+    private void LoadReferenceData()
+    {
+        using var context = new AppDbContext();
+        AllCategories.Clear();
+        AllUnits.Clear();
+
+        foreach (var cat in context.Category.OrderBy(c => c.Name)) AllCategories.Add(cat);
+        foreach (var unit in context.Unit.OrderBy(u => u.Name)) AllUnits.Add(unit);
     }
 
     private void ImportFromExcel(object sender, RoutedEventArgs e)
@@ -48,9 +61,9 @@ public partial class ArrivalWindow : Window
             var quantityStr = ReadCell(worksheet, row, 4);
             var priceStr = ReadCell(worksheet, row, 5);
 
-            if (string.IsNullOrWhiteSpace(categoryName) ||
-                string.IsNullOrWhiteSpace(name) ||
-                string.IsNullOrWhiteSpace(unitName))
+            if (string.IsNullOrWhiteSpace(name) ||
+                string.IsNullOrWhiteSpace(unitName) ||
+                string.IsNullOrWhiteSpace(categoryName))
             {
                 MessageBox.Show($"Пропущены обязательные поля в строке {row}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 continue;
@@ -63,12 +76,22 @@ public partial class ArrivalWindow : Window
                 continue;
             }
 
+            // Находим ID категории и единицы измерения по имени
+            var categoryId = AllCategories.FirstOrDefault(c => c.Name == categoryName)?.Id;
+            var unitId = AllUnits.FirstOrDefault(u => u.Name == unitName)?.Id;
+
+            if (categoryId == null || unitId == null)
+            {
+                MessageBox.Show($"Не найдены категория или единица измерения в строке {row}.\nУбедитесь, что справочники заполнены.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                continue;
+            }
+
             ImportedItems.Add(new SupplyImportViewModel
             {
                 Date = deliveryDate,
                 Name = name.Trim(),
-                CategoryName = categoryName.Trim(),
-                UnitName = unitName.Trim(),
+                CategoryId = categoryId.Value,
+                UnitId = unitId.Value,
                 Quantity = quantity,
                 Price = price
             });
@@ -84,8 +107,7 @@ public partial class ArrivalWindow : Window
     {
         if (ImportedItems.Count == 0)
         {
-            MessageBox.Show("Нет данных для сохранения.", "Информация",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Нет данных для сохранения.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -102,32 +124,20 @@ public partial class ArrivalWindow : Window
                 {
                     foreach (var item in ImportedItems)
                     {
-                        // Единая поставка
+                        // Загружаем связанные сущности
+                        var category = await context.Category.FindAsync(item.CategoryId);
+                        var unit = await context.Unit.FindAsync(item.UnitId);
+                        if (category == null || unit == null)
+                        {
+                            throw new InvalidOperationException("Категория или единица измерения не найдены в БД при сохранении.");
+                        }
+
                         var supply = new Supply
                         {
-                            Date = item.Date,
-                            Name = $"Поставка от {item.Date:dd.MM.yyyy}"
+                            Date = DeliveryDatePicker.SelectedDate ?? DateTime.Today,
+                            Name = $"Поставка от {DateTime.Now:dd.MM.yyyy}"
                         };
 
-                        // === Создаём или находим категорию ===
-                        var category = await context.Category
-                            .FirstOrDefaultAsync(c => c.Name == item.CategoryName);
-                        if (category == null)
-                        {
-                            category = new Category { Name = item.CategoryName };
-                            context.Category.Add(category);
-                        }
-
-                        // === Создаём или находим единицу измерения ===
-                        var unit = await context.Unit
-                            .FirstOrDefaultAsync(u => u.Name == item.UnitName);
-                        if (unit == null)
-                        {
-                            unit = new Unit { Name = item.UnitName };
-                            context.Unit.Add(unit);
-                        }
-
-                        // === Создаём или обновляем товар ===
                         var product = await context.Product
                             .Include(p => p.Category)
                             .Include(p => p.Unit)
@@ -140,19 +150,17 @@ public partial class ArrivalWindow : Window
                                 Name = item.Name,
                                 Price = item.Price,
                                 Amount = item.Quantity,
-                                Category = category,
-                                Unit = unit
+                                CategoryId = item.CategoryId,
+                                UnitId = item.UnitId
                             };
                             context.Product.Add(product);
                         }
                         else
                         {
-                            if (product.Price < item.Price)
-                                product.Price = item.Price;
+                            if (product.Price < item.Price) product.Price = item.Price;
                             product.Amount += item.Quantity;
                         }
 
-                        // === Элемент поставки ===
                         var supplyItem = new SupplyItem
                         {
                             Supply = supply,
@@ -170,8 +178,7 @@ public partial class ArrivalWindow : Window
                     await transaction.CommitAsync();
 
                     ImportedItems.Clear();
-                    MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Данные успешно сохранены в базу.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -182,8 +189,7 @@ public partial class ArrivalWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -198,8 +204,8 @@ public partial class ArrivalWindow : Window
     {
         public DateTime Date { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string CategoryName { get; set; } = string.Empty;
-        public string UnitName { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public int UnitId { get; set; }
         public int Quantity { get; set; }
         public int Price { get; set; }
     }

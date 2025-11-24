@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Zoomag.Views"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="Привоз" Height="600" Width="1000"
@@ -44,11 +45,37 @@
                   SelectionUnit="FullRow"
                   Margin="0,0,0,10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Категория" Binding="{Binding CategoryName}" Width="120" />
-                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*" />
-                <DataGridTextColumn Header="Ед/изм" Binding="{Binding UnitName}" Width="80" />
-                <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity}" Width="80" />
-                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="80" />
+                <DataGridTextColumn Header="Наименование"
+                                    Binding="{Binding Name}"
+                                    Width="*" />
+                <DataGridTemplateColumn Header="Ед/изм" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.AllUnits}"
+                                SelectedValue="{Binding UnitId, Mode=TwoWay}"
+                                SelectedValuePath="Id"
+                                DisplayMemberPath="Name" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Категория" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox
+                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.AllCategories}"
+                                SelectedValue="{Binding CategoryId, Mode=TwoWay}"
+                                SelectedValuePath="Id"
+                                DisplayMemberPath="Name" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Кол-во"
+                                    Binding="{Binding Quantity}"
+                                    Width="80" />
+                <DataGridTextColumn Header="Цена"
+                                    Binding="{Binding Price}"
+                                    Width="80" />
             </DataGrid.Columns>
         </DataGrid>
 
