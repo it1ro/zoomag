@@ -4,19 +4,26 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Zoomag.Views"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="Привоз" Height="600" Width="1000"
         MinHeight="500" MinWidth="800">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />   
+            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Шапка: дата + кнопки -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
+            <TextBlock Text="Дата поставки:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <DatePicker x:Name="DeliveryDatePicker"
+                        SelectedDate="{x:Static system:DateTime.Today}"
+                        Margin="0,0,15,0" />
+
             <Button x:Name="ImportButton"
-                    Content="Загрузить список товаров"
+                    Content="Ввод списком"
                     Click="ImportFromExcel"
                     Margin="0,0,10,0"
                     Height="35" />
@@ -24,10 +31,10 @@
                     Content="Запись в БД"
                     Click="SaveToDatabase"
                     Height="35"
-                    Background="LightGreen"
                     FontWeight="SemiBold" />
         </StackPanel>
 
+        <!-- Таблица поставки -->
         <DataGrid x:Name="SupplyDataGrid"
                   Grid.Row="1"
                   AutoGenerateColumns="False"
@@ -38,9 +45,6 @@
                   SelectionUnit="FullRow"
                   Margin="0,0,0,10">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Дата"
-                                    Binding="{Binding Path=Date, StringFormat=dd.MM.yyyy}"
-                                    Width="Auto" MinWidth="80" />
                 <DataGridTextColumn Header="Наименование"
                                     Binding="{Binding Path=Name}"
                                     Width="Auto" MinWidth="150" />
@@ -49,20 +53,11 @@
                         <DataTemplate>
                             <ComboBox
                                 ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.UnitsList}"
-                                SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}" 
-                                SelectedValuePath="Id" 
-                                DisplayMemberPath="Name" /> 
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                            <ComboBox
-                                ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.UnitsList}"
                                 SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}"
                                 SelectedValuePath="Id"
                                 DisplayMemberPath="Name" />
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Категория" Width="Auto" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
@@ -84,6 +79,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
+        <!-- Управление -->
         <Button x:Name="BackButton"
                 Grid.Row="2"
                 Content="Назад"

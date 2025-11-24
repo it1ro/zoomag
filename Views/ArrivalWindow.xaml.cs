@@ -44,7 +44,7 @@ public partial class ArrivalWindow : Window
     }
     // --- КОНЕЦ МЕТОДА ---
 
-    private void ImportFromExcel(object sender, RoutedEventArgs e)
+private void ImportFromExcel(object sender, RoutedEventArgs e)
 {
     var openDialog = new OpenFileDialog
     {
@@ -64,60 +64,49 @@ public partial class ArrivalWindow : Window
 
     ImportedItems.Clear();
 
+    // ✅ Единая дата для всей поставки
+    var deliveryDate = DeliveryDatePicker.SelectedDate ?? DateTime.Today;
+
     for (var row = 2; row <= lastRow; row++)
     {
         var name = ReadCell(worksheet, row, 1);
-        var unitIdStr = ReadCell(worksheet, row, 2); // Это ID единицы измерения
-        var categoryName = ReadCell(worksheet, row, 5); // Это название категории (может быть пустым)
+        var unitIdStr = ReadCell(worksheet, row, 2);
+        var categoryName = ReadCell(worksheet, row, 5);
         var quantityStr = ReadCell(worksheet, row, 3);
         var priceStr = ReadCell(worksheet, row, 4);
 
         if (!int.TryParse(quantityStr, out var quantity) || !int.TryParse(priceStr, out var price))
         {
-            MessageBox.Show($"Неверный формат данных в строке {row}.", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Неверный формат данных в строке {row}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             continue;
         }
 
-        // Попытка преобразовать ID единицы измерения из строки
         if (!int.TryParse(unitIdStr, out var unitId))
         {
-            MessageBox.Show($"Неверный формат ID единицы измерения в строке {row}.", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Неверный формат ID единицы измерения в строке {row}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             continue;
         }
 
-        // Найти объект Unit по ID
         var unit = UnitsList.FirstOrDefault(u => u.Id == unitId);
         if (unit == null)
         {
-            MessageBox.Show($"Единица измерения с ID '{unitId}' не найдена в справочнике.", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            unit = UnitsList.FirstOrDefault(); // fallback, если не найдена
-            if (unit == null) continue; // Если и fallback не сработал, пропускаем строку
+            unit = UnitsList.FirstOrDefault();
+            if (unit == null) continue;
         }
 
-        // Найти объект Category по имени, если имя не пустое
         Category category = null;
-        if (!string.IsNullOrWhiteSpace(categoryName)) // Проверяем, что имя категории не пустое
+        if (!string.IsNullOrWhiteSpace(categoryName))
         {
             category = CategoriesList.FirstOrDefault(c => c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
-            // Убираем сообщение об ошибке, если категория не найдена
-            // if (category == null)
-            // {
-            //      MessageBox.Show($"Категория '{categoryName}' не найдена в справочнике.", "Ошибка",
-            //         MessageBoxButton.OK, MessageBoxImage.Warning);
-            //     category = CategoriesList.FirstOrDefault(); // fallback
-            // }
         }
-        // Если categoryName пустое или категория не найдена, category останется null
 
         var supplyItem = new SupplyImportViewModel
         {
-            Date = DateTime.Today,
+            // ✅ Используем ЕДИНУЮ дату
+            Date = deliveryDate,
             Name = name,
-            Unit = unit, // Присваиваем найденный объект Unit
-            Category = category, // Присваиваем найденный объект Category или null
+            Unit = unit,
+            Category = category,
             Quantity = quantity,
             Price = price
         };
