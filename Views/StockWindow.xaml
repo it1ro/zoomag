@@ -21,7 +21,7 @@
                 <ComboBoxItem Content="Все категории" Tag="-1"/>
             </ComboBox>
 
-            <Button Content="Обновить" Click="RefreshData" Width="100"/>
+            <Button Content="Сбросить фильтры" Click="ResetFilters" Width="150"/>
         </StackPanel>
 
         <!-- Таблица остатков -->

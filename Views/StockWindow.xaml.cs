@@ -88,9 +88,11 @@ public partial class StockWindow : Window
         ApplyFilter();
     }
 
-    private void RefreshData(object sender, RoutedEventArgs e)
+    private void ResetFilters(object sender, RoutedEventArgs e)
     {
-        LoadData();
+        SearchBox.Clear();
+        CategoryFilter.SelectedIndex = 0; // «Все категории» — первый элемент
+        ApplyFilter(); // необязательно, так как Clear() вызовет TextChanged → ApplyFilter
     }
 
     private void GoToAdmin(object sender, RoutedEventArgs e)
