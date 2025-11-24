@@ -33,7 +33,6 @@ public partial class CategoriesEditorWindow : Window
                 return;
             }
 
-            // Проверка дубликата (регистронезависимо — за счёт COLLATION БД)
             bool isDuplicate = _context.Category.Any(c => c.Name == newName);
             if (isDuplicate)
             {
@@ -76,7 +75,6 @@ public partial class CategoriesEditorWindow : Window
                 return;
             }
 
-            // Проверка дубликата, кроме текущей категории
             bool isDuplicate = _context.Category.Any(c => c.Id != selected.Id && c.Name == newName);
             if (isDuplicate)
             {

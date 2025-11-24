@@ -6,7 +6,6 @@
     <ScrollViewer>
         <StackPanel Margin="20">
             
-            <!-- 🔹 Справочники -->
             <GroupBox Header="Справочники" Padding="15">
                 <StackPanel Orientation="Horizontal">
                     <Button Content="Товары" Width="120" Height="36" Margin="0,0,10,0" Click="OpenProductEditor" />

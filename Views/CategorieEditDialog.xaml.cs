@@ -8,14 +8,12 @@ public partial class CategoryEditDialog : Window
     public Category Result { get; private set; }
     private readonly bool _isEditMode;
 
-    // Для создания новой категории
     public CategoryEditDialog()
     {
         InitializeComponent();
         _isEditMode = false;
     }
 
-    // Для редактирования существующей
     public CategoryEditDialog(Category categoryToEdit)
     {
         InitializeComponent();

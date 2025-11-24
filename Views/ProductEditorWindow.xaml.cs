@@ -64,7 +64,6 @@ public partial class ProductEditorWindow : Window
         var dialog = new ProductEditDialog(productCopy) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
-            // Обновляем поля в отслеживаемом экземпляре
             _context.Entry(selected).CurrentValues.SetValues(dialog.Result);
             try
             {

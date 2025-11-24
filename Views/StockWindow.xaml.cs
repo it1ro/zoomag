@@ -91,8 +91,8 @@ public partial class StockWindow : Window
     private void ResetFilters(object sender, RoutedEventArgs e)
     {
         SearchBox.Clear();
-        CategoryFilter.SelectedIndex = 0; // «Все категории» — первый элемент
-        ApplyFilter(); // необязательно, так как Clear() вызовет TextChanged → ApplyFilter
+        CategoryFilter.SelectedIndex = 0;
+        ApplyFilter();
     }
 
     private void GoToAdmin(object sender, RoutedEventArgs e)
@@ -109,7 +109,6 @@ public partial class StockWindow : Window
     }
 }
 
-// Вспомогательный DTO для отображения + вычисления TotalValue
 public class StockItemView
 {
     public int Id { get; set; }

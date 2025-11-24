@@ -13,22 +13,20 @@
         WindowStartupLocation="CenterScreen">
     <Grid Margin="15">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />        <!-- Заголовок -->
-            <RowDefinition Height="Auto" />        <!-- Поиск и фильтры -->
-            <RowDefinition Height="*" />           <!-- Таблица товаров -->
-            <RowDefinition Height="Auto" />        <!-- Информация о чеке -->
-            <RowDefinition Height="Auto" />        <!-- Таблица чека -->
-            <RowDefinition Height="Auto" />        <!-- Кнопки управления -->
+            <RowDefinition Height="Auto" />       
+            <RowDefinition Height="Auto" />       
+            <RowDefinition Height="*" />         
+            <RowDefinition Height="Auto" />     
+            <RowDefinition Height="Auto" />    
+            <RowDefinition Height="Auto" />   
         </Grid.RowDefinitions>
 
-        <!-- Заголовок -->
         <TextBlock Grid.Row="0"
                    Text="Продажа товаров"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"
                    Margin="0,0,0,15" />
 
-        <!-- Поиск и фильтры -->
         <Border Grid.Row="1"
                 CornerRadius="4"
                 Padding="10"
@@ -58,7 +56,6 @@
             </Grid>
         </Border>
 
-        <!-- Таблица товаров -->
         <DataGrid x:Name="ProductListGrid"
                   Grid.Row="2"
                   AutoGenerateColumns="False"
@@ -87,7 +84,6 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Информация о чеке -->
         <Border Grid.Row="3"
                 CornerRadius="4"
                 Padding="15"
@@ -134,7 +130,6 @@
             </Grid>
         </Border>
 
-        <!-- Таблица чека -->
         <DataGrid x:Name="ReceiptItemsGrid"
                   Grid.Row="4"
                   AutoGenerateColumns="False"
@@ -169,7 +164,6 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Кнопки управления -->
         <StackPanel Grid.Row="5"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"

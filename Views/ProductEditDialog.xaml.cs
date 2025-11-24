@@ -1,4 +1,3 @@
-// Views/ProductEditDialog.xaml.cs
 using System.Windows;
 using Zoomag.Data;
 using Zoomag.Models;
@@ -11,7 +10,6 @@ public partial class ProductEditDialog : Window
     private readonly bool _isEditMode;
     private readonly AppDbContext _context;
 
-    // Для создания нового товара
     public ProductEditDialog()
     {
         InitializeComponent();
@@ -20,7 +18,6 @@ public partial class ProductEditDialog : Window
         LoadReferences();
     }
 
-    // Для редактирования существующего
     public ProductEditDialog(Product productToEdit)
     {
         InitializeComponent();

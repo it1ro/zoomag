@@ -12,7 +12,7 @@ using Zoomag.Data;
 namespace Zoomag.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251119172206_InitialCreate")]
+    [Migration("20251124213503_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

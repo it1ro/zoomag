@@ -1,10 +1,3 @@
-// Файл: Zoomag/Services/ZeroStockReportGenerator.cs
-
-// <- Добавь это
-// <- Для SaveFileDialog
-
-// <- Для MessageBox
-
 namespace Zoomag.Services;
 
 using System.Windows;
@@ -32,7 +25,6 @@ public class ZeroStockReportGenerator
             .Select(t => new
             {
                 t.Name,
-                // Теперь безопасно обращаемся к Name, т.к. связи подгружены
                 Category = t.Category != null ? t.Category.Name : "Без категории",
                 Unit = t.Unit != null ? t.Unit.Name : "Без ед.изм.",
                 t.Price
@@ -40,18 +32,15 @@ public class ZeroStockReportGenerator
             .OrderBy(x => x.Name)
             .ToList();
 
-        // 2. Создаём Excel-файл
         var workbook = new XLWorkbook();
         var ws = workbook.Worksheets.Add("Нулевые позиции");
 
-        // Заголовок
         ws.Cell(1, 1).Value = "Отчёт по нулевым позициям";
         ws.Cell(1, 1).Style.Font.Bold = true;
         ws.Cell(1, 1).Style.Font.FontSize = 16;
         ws.Cell(1, 3).Value = $"Сгенерировано: {DateTime.Now:dd.MM.yyyy HH:mm}";
         ws.Row(1).Height = 30;
 
-        // Подзаголовки
         ws.Cell(3, 1).Value = "Наименование";
         ws.Cell(3, 2).Value = "Категория";
         ws.Cell(3, 3).Value = "Ед. изм.";
@@ -59,7 +48,6 @@ public class ZeroStockReportGenerator
         ws.Row(3).Style.Font.Bold = true;
         ws.Row(3).Height = 25;
 
-        // Данные
         var row = 4;
         foreach (var item in zeroStockItems)
         {
@@ -75,36 +63,32 @@ public class ZeroStockReportGenerator
         ws.Cell(row + 1, 1).Style.Font.Bold = true;
         ws.Cell(row + 1, 1).Style.Font.FontColor = XLColor.Red;
 
-        // Автоподбор ширины столбцов
         ws.Columns().AdjustToContents();
 
-        // 3. Выбираем путь через диалог, если outputPath не задан
         if (string.IsNullOrEmpty(outputPath))
         {
             var saveFileDialog = new SaveFileDialog
             {
                 Filter = "Excel Files|*.xlsx;*.xlsm",
-                FileName = $"Нулевые позиции {DateTime.Now:yyyy-MM-dd HH-mm}.xlsx", // Предлагаемое имя файла
+                FileName = $"Нулевые позиции {DateTime.Now:yyyy-MM-dd HH-mm}.xlsx",
                 DefaultExt = ".xlsx",
                 AddExtension = true
             };
 
-            if (saveFileDialog.ShowDialog() == true) // true, если пользователь нажал "Сохранить"
+            if (saveFileDialog.ShowDialog() == true)
             {
                 outputPath = saveFileDialog.FileName;
             }
             else
             {
-                // Пользователь отменил сохранение
                 MessageBox.Show("Сохранение отчёта отменено.", "Информация", MessageBoxButton.OK,
                     MessageBoxImage.Information);
-                return null; // Возвращаем null, если не сохранили
+                return null;
             }
         }
 
-        // 4. Сохраняем файл
         workbook.SaveAs(outputPath);
 
-        return outputPath; // Возвращаем путь к сохранённому файлу
+        return outputPath;
     }
 }

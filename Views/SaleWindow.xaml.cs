@@ -32,13 +32,11 @@ public partial class SaleWindow : Window
         {
             using (var context = new AppDbContext())
             {
-                // Загружаем продукты с категорией и единицей измерения
                 var products = context.Product
                     .Include(p => p.Category)
                     .Include(p => p.Unit)
                     .ToList();
 
-                // Создаем DTO для отображения, чтобы не изменять оригинальные сущности
                 _allProducts = products.Select(p => new ProductDisplayDto
                 {
                     Id = p.Id,
@@ -116,9 +114,8 @@ public partial class SaleWindow : Window
             ReceiptItemsGrid.Items.Refresh();
         }
 
-        // ✅ Уменьшаем количество в DTO и обновляем отображение
         selectedProductDto.Qty--;
-        ProductListGrid.Items.Refresh(); // Обновляем DataGrid
+        ProductListGrid.Items.Refresh();
 
         UpdateReceiptDisplay();
     }
@@ -130,13 +127,12 @@ public partial class SaleWindow : Window
         var receiptItem = dataGridRow?.DataContext as ReceiptItem;
         if (receiptItem != null)
         {
-            // ✅ Найти соответствующий DTO и увеличить Qty
             var productDto = _allProducts.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-            if (productDto != null) productDto.Qty += receiptItem.Quantity; // Возвращаем количество
+            if (productDto != null) productDto.Qty += receiptItem.Quantity;
 
             _receiptItems.Remove(receiptItem);
             ReceiptItemsGrid.Items.Refresh();
-            ProductListGrid.Items.Refresh(); // Обновляем список товаров
+            ProductListGrid.Items.Refresh();
             UpdateReceiptDisplay();
         }
     }
@@ -152,7 +148,6 @@ public partial class SaleWindow : Window
         if (MessageBox.Show("Вы уверены, что хотите очистить чек?", "Подтверждение",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
-            // ✅ Возвращаем товары обратно
             foreach (var receiptItem in _receiptItems)
             {
                 var productDto = _allProducts.FirstOrDefault(p => p.Id == receiptItem.ProductId);
@@ -161,7 +156,7 @@ public partial class SaleWindow : Window
 
             _receiptItems.Clear();
             ReceiptItemsGrid.Items.Refresh();
-            ProductListGrid.Items.Refresh(); // Обновляем список товаров
+            ProductListGrid.Items.Refresh();
             UpdateReceiptDisplay();
         }
     }
@@ -178,7 +173,6 @@ public partial class SaleWindow : Window
         using var context = new AppDbContext();
         try
         {
-            // Проверяем наличие товара на складе
             var hasInsufficientStock = false;
             var insufficientProducts = new List<string>();
 
@@ -197,17 +191,15 @@ public partial class SaleWindow : Window
             {
                 var message = "Недостаточно товара на складе:\n" + string.Join("\n", insufficientProducts);
                 MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return; // Не завершаем продажу
+                return;
             }
 
-            // Обновляем количество на складе
             foreach (var receiptItem in _receiptItems)
             {
                 var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
                 if (product != null) product.Amount -= receiptItem.Quantity;
             }
 
-            // Создаём запись о продаже
             var sale = new Sale
             {
                 Name = $"Продажа от {DateTime.Now:dd.MM.yyyy HH:mm}",
@@ -217,9 +209,8 @@ public partial class SaleWindow : Window
             };
 
             context.Sale.Add(sale);
-            context.SaveChanges(); // Сохраняем продажу, чтобы получить Id
+            context.SaveChanges();
 
-            // Создаём связи продажа-товар
             foreach (var receiptItem in _receiptItems)
             {
                 var saleItem = new SaleItem
@@ -230,14 +221,14 @@ public partial class SaleWindow : Window
                 context.SaleItem.Add(saleItem);
             }
 
-            context.SaveChanges(); // Сохраняем связи
+            context.SaveChanges();
 
             MessageBox.Show($"Покупка успешно оформлена!\nОбщая сумма: {_receiptItems.Sum(r => r.Total)} руб.",
                 "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
 
             _receiptItems.Clear();
             UpdateReceiptDisplay();
-            LoadAllData(); // Обновляем список товаров
+            LoadAllData();
         }
         catch (Exception ex)
         {
@@ -269,7 +260,6 @@ public partial class SaleWindow : Window
         TotalAmountDisplay.Text = totalAmount.ToString();
     }
 
-    // Вспомогательный метод для поиска родительского элемента
     private static T FindParent<T>(DependencyObject child) where T : DependencyObject
     {
         var parentObject = VisualTreeHelper.GetParent(child);
@@ -280,7 +270,6 @@ public partial class SaleWindow : Window
     }
 }
 
-// DTO для отображения товара в DataGrid
 public class ProductDisplayDto
 {
     public int Id { get; set; }

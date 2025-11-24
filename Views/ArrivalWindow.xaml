@@ -9,12 +9,11 @@
         MinHeight="500" MinWidth="800">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Кнопки импорта/сохранения -->
-            <RowDefinition Height="*" />    <!-- Таблица данных -->
-            <RowDefinition Height="Auto" /> <!-- Кнопка назад -->
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />   
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Панель кнопок -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Button x:Name="ImportButton"
                     Content="Загрузить список товаров"
@@ -29,7 +28,6 @@
                     FontWeight="SemiBold" />
         </StackPanel>
 
-        <!-- Таблица поставок -->
         <DataGrid x:Name="SupplyDataGrid"
                   Grid.Row="1"
                   AutoGenerateColumns="False"
@@ -46,7 +44,6 @@
                 <DataGridTextColumn Header="Наименование"
                                     Binding="{Binding Path=Name}"
                                     Width="Auto" MinWidth="150" />
-                <!-- Выпадающий список для Единицы измерения -->
                 <DataGridTemplateColumn Header="Ед/изм" Width="Auto" MinWidth="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -54,7 +51,7 @@
                                 ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ArrivalWindow}, Path=DataContext.UnitsList}"
                                 SelectedValue="{Binding Path=Unit.Id, Mode=TwoWay}" 
                                 SelectedValuePath="Id" 
-                                DisplayMemberPath="Name" /> <!-- Отображает Name -->
+                                DisplayMemberPath="Name" /> 
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -67,7 +64,6 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <!-- Выпадающий список для Категории -->
                 <DataGridTemplateColumn Header="Категория" Width="Auto" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -88,7 +84,6 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Кнопка назад -->
         <Button x:Name="BackButton"
                 Grid.Row="2"
                 Content="Назад"
