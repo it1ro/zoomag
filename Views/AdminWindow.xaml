@@ -63,6 +63,7 @@
                     <Button Content="Привоз" Margin="0,0,10,0" Click="ShowArrival" />
                     <Button Content="Продажа" Margin="0,0,10,0" Click="ShowSale" />
                     <Button Content="Склад" Margin="0,0,10,0" Click="ShowStock" />
+                    <Button Content="Редактор товаров" Click="OpenProductEditor" />
                     <Button Content="Отчеты" Margin="0,0,10,0" Click="ShowReports" />
                 </StackPanel>
             </GroupBox>

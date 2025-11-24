@@ -223,4 +223,11 @@ private void SaveProduct(object sender, RoutedEventArgs e)
         Hide();
         reportsWindow.Show();
     }
+
+    private void OpenProductEditor(object sender, RoutedEventArgs e)
+    {
+        var editor = new ProductEditorWindow();
+        Hide();
+        editor.Show();
+    }
 }
