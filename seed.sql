@@ -48,6 +48,7 @@ SET IDENTITY_INSERT [User] ON;
 INSERT INTO [User] (Id, Login, Password, Role) VALUES
     (1, 'admin', 'admin', 0),
     (2, 'seller1', '123', 1);
+    (3, 'seller2', '123', 1);
 SET IDENTITY_INSERT [User] OFF;
 
 -- Для Supply

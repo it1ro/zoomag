@@ -26,4 +26,11 @@ public partial class SellerWindow : Window
         var productEditorWindow = new ProductEditorWindow();
         productEditorWindow.Show();
     }
+
+    private void Logout(object sender, RoutedEventArgs e)
+    {
+        var loginWindow = new LoginWindow();
+        loginWindow.Show();
+        Close(); // закрываем окно продавца
+    }
 }
