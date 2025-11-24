@@ -54,7 +54,6 @@ public partial class ArrivalWindow : Window
 
         for (var row = 2; row <= lastRow; row++)
         {
-            // Порядок колонок: Категория, Наименование, Ед.изм., Кол-во, Цена
             var categoryName = ReadCell(worksheet, row, 1);
             var name = ReadCell(worksheet, row, 2);
             var unitName = ReadCell(worksheet, row, 3);
@@ -65,24 +64,26 @@ public partial class ArrivalWindow : Window
                 string.IsNullOrWhiteSpace(unitName) ||
                 string.IsNullOrWhiteSpace(categoryName))
             {
-                MessageBox.Show($"Пропущены обязательные поля в строке {row}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Пропущены обязательные поля в строке {row}.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 continue;
             }
 
             if (!int.TryParse(quantityStr, out var quantity) || quantity <= 0 ||
-                !int.TryParse(priceStr, out var price) || price < 0)
+                !int.TryParse(priceStr, out var price) || price <= 0)
             {
-                MessageBox.Show($"Неверный формат количества или цены в строке {row}.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Неверный формат количества или цены в строке {row}.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 continue;
             }
 
-            // Находим ID категории и единицы измерения по имени
-            var categoryId = AllCategories.FirstOrDefault(c => c.Name == categoryName)?.Id;
-            var unitId = AllUnits.FirstOrDefault(u => u.Name == unitName)?.Id;
+            var category = AllCategories.FirstOrDefault(c => c.Name == categoryName);
+            var unit = AllUnits.FirstOrDefault(u => u.Name == unitName);
 
-            if (categoryId == null || unitId == null)
+            if (category == null || unit == null)
             {
-                MessageBox.Show($"Не найдены категория или единица измерения в строке {row}.\nУбедитесь, что справочники заполнены.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"В строке {row} не найдены категория '{categoryName}' или ед.изм. '{unitName}'.\nУбедитесь, что справочники заполнены.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 continue;
             }
 
@@ -90,8 +91,8 @@ public partial class ArrivalWindow : Window
             {
                 Date = deliveryDate,
                 Name = name.Trim(),
-                CategoryId = categoryId.Value,
-                UnitId = unitId.Value,
+                CategoryId = category.Id,
+                UnitId = unit.Id,
                 Quantity = quantity,
                 Price = price
             });
@@ -107,7 +108,18 @@ public partial class ArrivalWindow : Window
     {
         if (ImportedItems.Count == 0)
         {
-            MessageBox.Show("Нет данных для сохранения.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Нет данных для сохранения.", "Информация",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        // 🔒 Валидация: отсекаем строки с нулевым или отрицательным количеством/ценой
+        var invalidItems = ImportedItems.Where(i => i.Quantity <= 0 || i.Price <= 0).ToList();
+        if (invalidItems.Any())
+        {
+            var names = string.Join(", ", invalidItems.Take(5).Select(i => i.Name));
+            MessageBox.Show($"Невозможно сохранить записи с нулевой или отрицательной ценой/количеством.\nПримеры: {names}", "Ошибка валидации",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -122,20 +134,21 @@ public partial class ArrivalWindow : Window
 
                 try
                 {
+                    var deliveryDate = DeliveryDatePicker.SelectedDate ?? DateTime.Today;
+
                     foreach (var item in ImportedItems)
                     {
-                        // Загружаем связанные сущности
                         var category = await context.Category.FindAsync(item.CategoryId);
                         var unit = await context.Unit.FindAsync(item.UnitId);
                         if (category == null || unit == null)
                         {
-                            throw new InvalidOperationException("Категория или единица измерения не найдены в БД при сохранении.");
+                            throw new InvalidOperationException("Категория или единица измерения не найдены при сохранении.");
                         }
 
                         var supply = new Supply
                         {
-                            Date = DeliveryDatePicker.SelectedDate ?? DateTime.Today,
-                            Name = $"Поставка от {DateTime.Now:dd.MM.yyyy}"
+                            Date = deliveryDate,
+                            Name = $"Поставка от {deliveryDate:dd.MM.yyyy}"
                         };
 
                         var product = await context.Product
@@ -178,7 +191,8 @@ public partial class ArrivalWindow : Window
                     await transaction.CommitAsync();
 
                     ImportedItems.Clear();
-                    MessageBox.Show("Данные успешно сохранены в базу.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -189,7 +203,8 @@ public partial class ArrivalWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}", "Ошибка",
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
