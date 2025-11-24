@@ -7,7 +7,6 @@ namespace Zoomag.Views;
 public partial class CategoriesEditorWindow : Window
 {
     private readonly AppDbContext _context = new();
-    private Category _editingCategory;
 
     public CategoriesEditorWindow()
     {
@@ -21,63 +20,81 @@ public partial class CategoriesEditorWindow : Window
         CategoriesGrid.ItemsSource = categories;
     }
 
-    private void CategoriesGrid_SelectedCellsChanged(object sender, System.Windows.Controls.SelectedCellsChangedEventArgs e)
-    {
-        if (CategoriesGrid.SelectedItem is not Category selected) return;
-
-        _editingCategory = selected;
-        NameInput.Text = selected.Name;
-    }
-
     private void NewCategoryButton_Click(object sender, RoutedEventArgs e)
     {
-        ClearForm();
+        var dialog = new CategoryEditDialog { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            var newName = dialog.Result.Name.Trim();
+
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                MessageBox.Show("Название категории не может быть пустым.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Проверка дубликата (регистронезависимо — за счёт COLLATION БД)
+            bool isDuplicate = _context.Category.Any(c => c.Name == newName);
+            if (isDuplicate)
+            {
+                MessageBox.Show("Категория с таким названием уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _context.Category.Add(new Category { Name = newName });
+            try
+            {
+                _context.SaveChanges();
+                MessageBox.Show("Категория добавлена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadCategories();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
+    private void EditCategoryButton_Click(object sender, RoutedEventArgs e)
     {
-        var name = NameInput.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(name))
+        if (CategoriesGrid.SelectedItem is not Category selected)
         {
-            MessageBox.Show("Укажите название категории.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Выберите категорию для редактирования.", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        // Проверка дубликата (игнорируем регистр)
-        int editingId = _editingCategory?.Id ?? 0;
+        var categoryCopy = new Category { Id = selected.Id, Name = selected.Name };
+        var dialog = new CategoryEditDialog(categoryCopy) { Owner = this };
 
-        bool isDuplicate = _context.Category.Any(c =>
-            c.Id != editingId &&
-            c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (dialog.ShowDialog() == true)
+        {
+            var newName = dialog.Result.Name.Trim();
 
-        if (isDuplicate)
-        {
-            MessageBox.Show("Категория с таким названием уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                MessageBox.Show("Название категории не может быть пустым.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        if (_editingCategory == null)
-        {
-            // Создание
-            var category = new Category { Name = name };
-            _context.Category.Add(category);
-        }
-        else
-        {
-            // Редактирование
-            _editingCategory.Name = name;
-        }
+            // Проверка дубликата, кроме текущей категории
+            bool isDuplicate = _context.Category.Any(c => c.Id != selected.Id && c.Name == newName);
+            if (isDuplicate)
+            {
+                MessageBox.Show("Категория с таким названием уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        try
-        {
-            _context.SaveChanges();
-            MessageBox.Show("Категория сохранена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            ClearForm();
-            LoadCategories();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            selected.Name = newName;
+            try
+            {
+                _context.SaveChanges();
+                MessageBox.Show("Категория обновлена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadCategories();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
@@ -97,21 +114,13 @@ public partial class CategoriesEditorWindow : Window
             {
                 _context.SaveChanges();
                 MessageBox.Show("Категория удалена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-                ClearForm();
                 LoadCategories();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка удаления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-    }
-
-    private void ClearForm()
-    {
-        _editingCategory = null;
-        NameInput.Clear();
-        CategoriesGrid.UnselectAll();
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
