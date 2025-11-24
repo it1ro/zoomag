@@ -21,9 +21,9 @@ public partial class SellerWindow : Window
         stockWindow.Show();
     }
 
-    private void ShowProductOverview(object sender, RoutedEventArgs e)
+    private void ShowProducts(object sender, RoutedEventArgs e)
     {
-        var productOverviewWindow = new StockWindow();
-        productOverviewWindow.Show();
+        var productEditorWindow = new ProductEditorWindow();
+        productEditorWindow.Show();
     }
 }
