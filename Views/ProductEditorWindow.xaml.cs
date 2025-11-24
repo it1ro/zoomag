@@ -1,29 +1,18 @@
 using System.Windows;
-using System.Windows.Controls;
 using Zoomag.Data;
 using Zoomag.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Zoomag.Views;
 
-using Microsoft.EntityFrameworkCore;
-
 public partial class ProductEditorWindow : Window
 {
-    private AppDbContext _context;
-    private Product _editingProduct;
+    private readonly AppDbContext _context = new();
 
     public ProductEditorWindow()
     {
         InitializeComponent();
-        _context = new AppDbContext();
-        LoadReferenceData();
         LoadProducts();
-    }
-
-    private void LoadReferenceData()
-    {
-        CategorySelector.ItemsSource = _context.Category.ToList();
-        UnitSelector.ItemsSource = _context.Unit.ToList();
     }
 
     private void LoadProducts()
@@ -35,67 +24,58 @@ public partial class ProductEditorWindow : Window
         ProductsGrid.ItemsSource = products;
     }
 
-    private void ProductsGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+    private void NewProductButton_Click(object sender, RoutedEventArgs e)
     {
-        if (ProductsGrid.SelectedItem is not Product selected) return;
-
-        _editingProduct = selected;
-        NameInput.Text = selected.Name;
-        PriceInput.Text = selected.Price.ToString();
-        CategorySelector.SelectedValue = selected.CategoryId;
-        UnitSelector.SelectedValue = selected.UnitId;
+        var dialog = new ProductEditDialog { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            _context.Product.Add(dialog.Result);
+            try
+            {
+                _context.SaveChanges();
+                MessageBox.Show("Товар добавлен.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadProducts();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
+    private void EditProductButton_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(NameInput.Text) ||
-            !int.TryParse(PriceInput.Text, out var price) || price < 0)
+        if (ProductsGrid.SelectedItem is not Product selected)
         {
-            MessageBox.Show("Проверьте корректность ввода: название и цена (целое ≥0).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Выберите товар для редактирования.", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        if (CategorySelector.SelectedItem == null || UnitSelector.SelectedItem == null)
+        var productCopy = new Product
         {
-            MessageBox.Show("Выберите категорию и единицу измерения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            Id = selected.Id,
+            Name = selected.Name,
+            Price = selected.Price,
+            CategoryId = selected.CategoryId,
+            UnitId = selected.UnitId,
+            Amount = selected.Amount
+        };
 
-        var category = (Category)CategorySelector.SelectedItem;
-        var unit = (Unit)UnitSelector.SelectedItem;
-
-        if (_editingProduct == null)
+        var dialog = new ProductEditDialog(productCopy) { Owner = this };
+        if (dialog.ShowDialog() == true)
         {
-            // Создаём новый товар
-            var product = new Product
+            // Обновляем поля в отслеживаемом экземпляре
+            _context.Entry(selected).CurrentValues.SetValues(dialog.Result);
+            try
             {
-                Name = NameInput.Text.Trim(),
-                Price = price,
-                CategoryId = category.Id,
-                UnitId = unit.Id,
-                Amount = 0 // можно позже обновить при поставке
-            };
-            _context.Product.Add(product);
-        }
-        else
-        {
-            // Редактируем существующий
-            _editingProduct.Name = NameInput.Text.Trim();
-            _editingProduct.Price = price;
-            _editingProduct.CategoryId = category.Id;
-            _editingProduct.UnitId = unit.Id;
-        }
-
-        try
-        {
-            _context.SaveChanges();
-            MessageBox.Show("Товар сохранён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            ClearForm();
-            LoadProducts(); // обновляем таблицу
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                _context.SaveChanges();
+                MessageBox.Show("Товар обновлён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadProducts();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
@@ -115,24 +95,13 @@ public partial class ProductEditorWindow : Window
             {
                 _context.SaveChanges();
                 MessageBox.Show("Товар удалён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-                ClearForm();
                 LoadProducts();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка удаления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-    }
-
-    private void ClearForm()
-    {
-        _editingProduct = null;
-        NameInput.Clear();
-        PriceInput.Clear();
-        CategorySelector.SelectedIndex = -1;
-        UnitSelector.SelectedIndex = -1;
-        ProductsGrid.UnselectAll();
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -143,7 +112,7 @@ public partial class ProductEditorWindow : Window
         admin.Show();
     }
 
-    protected override void OnClosed(EventArgs e)
+    protected override void OnClosed(System.EventArgs e)
     {
         _context?.Dispose();
         base.OnClosed(e);

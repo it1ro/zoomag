@@ -1,0 +1,51 @@
+<Window x:Class="Zoomag.Views.UnitsEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Редактор единиц измерения" Height="500" Width="600">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Форма редактирования -->
+        <GroupBox Grid.Row="0" Header="Единица измерения" Padding="10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Название:" Grid.Column="0" VerticalAlignment="Center"/>
+                <TextBox x:Name="NameInput" Grid.Column="1" Margin="5"/>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <Button Content="Сохранить" Click="SaveButton_Click" Margin="0,0,0,5"/>
+                    <Button Content="Новая ед. изм." Click="NewUnitButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <!-- Таблица единиц измерения (read-only) -->
+        <DataGrid x:Name="UnitsGrid" Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  SelectedCellsChanged="UnitsGrid_SelectedCellsChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Кнопки управления -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Удалить" Click="DeleteButton_Click" Margin="0,0,10,0"/>
+            <Button Content="Назад" Click="BackButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
