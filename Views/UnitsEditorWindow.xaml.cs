@@ -7,7 +7,6 @@ namespace Zoomag.Views;
 public partial class UnitsEditorWindow : Window
 {
     private readonly AppDbContext _context = new();
-    private Unit _editingUnit;
 
     public UnitsEditorWindow()
     {
@@ -21,62 +20,77 @@ public partial class UnitsEditorWindow : Window
         UnitsGrid.ItemsSource = units;
     }
 
-    private void UnitsGrid_SelectedCellsChanged(object sender, System.Windows.Controls.SelectedCellsChangedEventArgs e)
-    {
-        if (UnitsGrid.SelectedItem is not Unit selected) return;
-
-        _editingUnit = selected;
-        NameInput.Text = selected.Name;
-    }
-
     private void NewUnitButton_Click(object sender, RoutedEventArgs e)
     {
-        ClearForm();
+        var dialog = new UnitEditDialog { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            var newName = dialog.Result.Name.Trim();
+
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                MessageBox.Show("Название не может быть пустым.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_context.Unit.Any(u => u.Name == newName))
+            {
+                MessageBox.Show("Единица измерения с таким названием уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _context.Unit.Add(new Unit { Name = newName });
+            try
+            {
+                _context.SaveChanges();
+                MessageBox.Show("Единица измерения добавлена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadUnits();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
+    private void EditUnitButton_Click(object sender, RoutedEventArgs e)
     {
-        var name = NameInput.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(name))
+        if (UnitsGrid.SelectedItem is not Unit selected)
         {
-            MessageBox.Show("Укажите название единицы измерения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Выберите единицу измерения для редактирования.", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        int editingId = _editingUnit?.Id ?? 0;
+        var unitCopy = new Unit { Id = selected.Id, Name = selected.Name };
+        var dialog = new UnitEditDialog(unitCopy) { Owner = this };
 
-        bool isDuplicate = _context.Unit.Any(u =>
-            u.Id != editingId &&
-            u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (dialog.ShowDialog() == true)
+        {
+            var newName = dialog.Result.Name.Trim();
 
-        if (isDuplicate)
-        {
-            MessageBox.Show("Единица измерения с таким названием уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                MessageBox.Show("Название не может быть пустым.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        if (_editingUnit == null)
-        {
-            // Создание
-            var unit = new Unit { Name = name };
-            _context.Unit.Add(unit);
-        }
-        else
-        {
-            // Редактирование
-            _editingUnit.Name = name;
-        }
+            if (_context.Unit.Any(u => u.Id != selected.Id && u.Name == newName))
+            {
+                MessageBox.Show("Единица измерения с таким названием уже существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-        try
-        {
-            _context.SaveChanges();
-            MessageBox.Show("Единица измерения сохранена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            ClearForm();
-            LoadUnits();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            selected.Name = newName;
+            try
+            {
+                _context.SaveChanges();
+                MessageBox.Show("Единица измерения обновлена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadUnits();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
@@ -96,21 +110,13 @@ public partial class UnitsEditorWindow : Window
             {
                 _context.SaveChanges();
                 MessageBox.Show("Единица измерения удалена.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-                ClearForm();
                 LoadUnits();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка удаления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-    }
-
-    private void ClearForm()
-    {
-        _editingUnit = null;
-        NameInput.Clear();
-        UnitsGrid.UnselectAll();
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
