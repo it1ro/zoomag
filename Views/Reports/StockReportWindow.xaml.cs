@@ -1,10 +1,10 @@
 // Для SaveFileDialog
-
 namespace Zoomag.Views.Reports;
 
 using System.Windows;
 using ClosedXML.Excel;
-using Data;
+using Zoomag.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
 public partial class StockReportWindow : Window
@@ -19,40 +19,61 @@ public partial class StockReportWindow : Window
     {
         using var context = new AppDbContext();
         var products = context.Product
-            .Select(product => new
+            .Select(p => new
             {
-                product.Name,
-                product.Price,
-                product.Amount,
-                TotalValue = product.Price * product.Amount // Вычисляем общую стоимость
+                p.Name,
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                Amount = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
             })
+            .Where(x => x.Amount != 0 || x.Price != 0) // опционально: показывать даже нулевые, если были операции
             .ToList();
 
-        StockReportGrid.ItemsSource = products;
+        var reportItems = products.Select(p => new
+        {
+            p.Name,
+            p.Price,
+            p.Amount,
+            TotalValue = p.Price * p.Amount
+        }).ToList();
+
+        StockReportGrid.ItemsSource = reportItems;
     }
 
     private void ExportToExcel(object sender, RoutedEventArgs e)
     {
-        // Загружаем данные заново, как и при отображении
         using var context = new AppDbContext();
         var exportData = context.Product
-            .Select(product => new
+            .Select(p => new
             {
-                product.Name,
-                product.Price,
-                product.Amount,
-                TotalValue = product.Price * product.Amount
+                p.Name,
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                Amount = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
             })
             .ToList();
 
-        if (!exportData.Any())
+        var reportItems = exportData.Select(p => new
         {
-            MessageBox.Show("Нет данных для отчета.", "Информация",
+            p.Name,
+            p.Price,
+            p.Amount,
+            TotalValue = p.Price * p.Amount
+        }).ToList();
+
+        if (!reportItems.Any())
+        {
+            MessageBox.Show("Нет данных для отчёта.", "Информация",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        // Диалог выбора файла
         var saveFileDialog = new SaveFileDialog
         {
             Filter = "Excel Files (.xlsx)|*.xlsx|All Files (*.*)|*.*",
@@ -61,15 +82,12 @@ public partial class StockReportWindow : Window
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
         };
 
-        var result = saveFileDialog.ShowDialog();
-
-        if (result != true) return; // Выход, если пользователь отменил
+        if (saveFileDialog.ShowDialog() != true) return;
 
         var fileName = saveFileDialog.FileName;
+        if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            fileName += ".xlsx";
 
-        if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase)) fileName += ".xlsx";
-
-        // Создание Excel-файла
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Отчет по складу");
 
@@ -80,11 +98,10 @@ public partial class StockReportWindow : Window
         worksheet.Cell(3, 2).Value = "Цена";
         worksheet.Cell(3, 3).Value = "Количество";
         worksheet.Cell(3, 4).Value = "Общая стоимость";
-
-        worksheet.Range(3, 1, 3, 4).Style.Font.Bold = true; // Жирный шрифт для заголовков
+        worksheet.Range(3, 1, 3, 4).Style.Font.Bold = true;
 
         var row = 4;
-        foreach (var item in exportData)
+        foreach (var item in reportItems)
         {
             worksheet.Cell(row, 1).Value = item.Name;
             worksheet.Cell(row, 2).Value = item.Price;
@@ -93,18 +110,17 @@ public partial class StockReportWindow : Window
             row++;
         }
 
-        // Автоширина столбцов
         worksheet.Columns().AdjustToContents();
 
         try
         {
             workbook.SaveAs(fileName);
-            MessageBox.Show($"Отчет сохранен: {fileName}", "Успех",
+            MessageBox.Show($"Отчёт сохранён: {fileName}", "Успех",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}",
+            MessageBox.Show($"Ошибка при сохранении отчёта: {ex.Message}",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

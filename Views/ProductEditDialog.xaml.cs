@@ -26,7 +26,6 @@ public partial class ProductEditDialog : Window
         LoadReferences();
 
         NameInput.Text = productToEdit.Name;
-        PriceInput.Text = productToEdit.Price.ToString();
         CategorySelector.SelectedValue = productToEdit.CategoryId;
         UnitSelector.SelectedValue = productToEdit.UnitId;
         Result = productToEdit;
@@ -40,10 +39,9 @@ public partial class ProductEditDialog : Window
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(NameInput.Text) ||
-            !int.TryParse(PriceInput.Text, out var price) || price < 0)
+        if (string.IsNullOrWhiteSpace(NameInput.Text))
         {
-            MessageBox.Show("Проверьте корректность ввода: название и цена (целое ≥0).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Укажите название товара.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -59,7 +57,6 @@ public partial class ProductEditDialog : Window
         if (_isEditMode)
         {
             Result.Name = NameInput.Text.Trim();
-            Result.Price = price;
             Result.CategoryId = categoryId;
             Result.UnitId = unitId;
         }
@@ -68,10 +65,9 @@ public partial class ProductEditDialog : Window
             Result = new Product
             {
                 Name = NameInput.Text.Trim(),
-                Price = price,
                 CategoryId = categoryId,
-                UnitId = unitId,
-                Amount = 0
+                UnitId = unitId
+                // ❌ НЕТ Price, ❌ НЕТ Amount
             };
         }
 

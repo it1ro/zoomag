@@ -25,6 +25,8 @@ public partial class StockWindow : Window
         var products = _context.Product
             .Include(p => p.Category)
             .Include(p => p.Unit)
+            .Include(p => p.SupplyItems)
+            .Include(p => p.SaleItems)
             .OrderBy(p => p.Name)
             .ToList();
 
@@ -34,8 +36,12 @@ public partial class StockWindow : Window
             Name = p.Name,
             CategoryName = p.Category?.Name ?? "—",
             UnitName = p.Unit?.Name ?? "—",
-            Price = p.Price,
-            Amount = p.Amount,
+            // Цена: последняя из поставок
+            Price = p.SupplyItems
+                .OrderByDescending(si => si.Supply.Date)
+                .FirstOrDefault()?.Price ?? 0,
+            // Остаток: поставки - продажи
+            Amount = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity),
             CategoryId = p.CategoryId
         }).ToList();
 

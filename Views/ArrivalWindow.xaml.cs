@@ -105,109 +105,81 @@ public partial class ArrivalWindow : Window
     }
 
     private async void SaveToDatabase(object sender, RoutedEventArgs e)
+{
+    if (ImportedItems.Count == 0)
     {
-        if (ImportedItems.Count == 0)
-        {
-            MessageBox.Show("Нет данных для сохранения.", "Информация",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        // 🔒 Валидация: отсекаем строки с нулевым или отрицательным количеством/ценой
-        var invalidItems = ImportedItems.Where(i => i.Quantity <= 0 || i.Price <= 0).ToList();
-        if (invalidItems.Any())
-        {
-            var names = string.Join(", ", invalidItems.Take(5).Select(i => i.Name));
-            MessageBox.Show($"Невозможно сохранить записи с нулевой или отрицательной ценой/количеством.\nПримеры: {names}", "Ошибка валидации",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        using var context = new AppDbContext();
-        var strategy = context.Database.CreateExecutionStrategy();
-
-        try
-        {
-            await strategy.ExecuteAsync(async () =>
-            {
-                using var transaction = context.Database.BeginTransaction();
-
-                try
-                {
-                    var deliveryDate = DeliveryDatePicker.SelectedDate ?? DateTime.Today;
-
-                    foreach (var item in ImportedItems)
-                    {
-                        var category = await context.Category.FindAsync(item.CategoryId);
-                        var unit = await context.Unit.FindAsync(item.UnitId);
-                        if (category == null || unit == null)
-                        {
-                            throw new InvalidOperationException("Категория или единица измерения не найдены при сохранении.");
-                        }
-
-                        var supply = new Supply
-                        {
-                            Date = deliveryDate,
-                            Name = $"Поставка от {deliveryDate:dd.MM.yyyy}"
-                        };
-
-                        var product = await context.Product
-                            .Include(p => p.Category)
-                            .Include(p => p.Unit)
-                            .FirstOrDefaultAsync(p => p.Name == item.Name);
-
-                        if (product == null)
-                        {
-                            product = new Product
-                            {
-                                Name = item.Name,
-                                Price = item.Price,
-                                Amount = item.Quantity,
-                                CategoryId = item.CategoryId,
-                                UnitId = item.UnitId
-                            };
-                            context.Product.Add(product);
-                        }
-                        else
-                        {
-                            if (product.Price < item.Price) product.Price = item.Price;
-                            product.Amount += item.Quantity;
-                        }
-
-                        var supplyItem = new SupplyItem
-                        {
-                            Supply = supply,
-                            Product = product,
-                            Quantity = item.Quantity,
-                            Price = item.Price,
-                            Total = item.Quantity * item.Price
-                        };
-
-                        context.Supply.Add(supply);
-                        context.SupplyItem.Add(supplyItem);
-                    }
-
-                    await context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    ImportedItems.Clear();
-                    MessageBox.Show("Данные успешно сохранены в базу.", "Успех",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    throw new InvalidOperationException($"Ошибка при сохранении: {ex.Message}", ex);
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        MessageBox.Show("Нет данных для сохранения.", "Информация",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+        return;
     }
 
+    // Валидация
+    var invalidItems = ImportedItems.Where(i => i.Quantity <= 0 || i.Price <= 0).ToList();
+    if (invalidItems.Any())
+    {
+        var names = string.Join(", ", invalidItems.Take(5).Select(i => i.Name));
+        MessageBox.Show($"Невозможно сохранить записи с нулевой или отрицательной ценой/количеством.\nПримеры: {names}", "Ошибка валидации",
+            MessageBoxButton.OK, MessageBoxImage.Warning);
+        return;
+    }
+
+    using var context = new AppDbContext();
+
+    try
+    {
+        var deliveryDate = DeliveryDatePicker.SelectedDate ?? DateTime.Today;
+
+        // Создаём одну поставку на весь импорт
+        var supply = new Supply
+        {
+            Date = deliveryDate,
+            Name = $"Поставка от {deliveryDate:dd.MM.yyyy}"
+        };
+        context.Supply.Add(supply);
+        await context.SaveChangesAsync(); // Получаем supply.Id
+
+        foreach (var item in ImportedItems)
+        {
+            // Находим или создаём товар (ТОЛЬКО как справочник)
+            var product = await context.Product
+                .FirstOrDefaultAsync(p => p.Name == item.Name && p.CategoryId == item.CategoryId && p.UnitId == item.UnitId);
+
+            if (product == null)
+            {
+                product = new Product
+                {
+                    Name = item.Name,
+                    CategoryId = item.CategoryId,
+                    UnitId = item.UnitId
+                };
+                context.Product.Add(product);
+                await context.SaveChangesAsync(); // Получаем product.Id
+            }
+
+            // Создаём запись о поставке
+            var supplyItem = new SupplyItem
+            {
+                SupplyId = supply.Id,
+                ProductId = product.Id,
+                Quantity = item.Quantity,
+                Price = item.Price,
+                Total = item.Quantity * item.Price
+            };
+            context.SupplyItem.Add(supplyItem);
+        }
+
+        await context.SaveChangesAsync();
+
+        ImportedItems.Clear();
+        MessageBox.Show("Поставка успешно сохранена.", "Успех",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Ошибка при сохранении поставки: {ex.Message}", "Ошибка",
+            MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+}
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
         var admin = new AdminWindow();

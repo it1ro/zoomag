@@ -19,7 +19,7 @@ public class AppDbContext : DbContext
         if (!optionsBuilder.IsConfigured)
             // В реальных проектах строку подключения получают из IConfiguration (appsettings.json)
             optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\mssqllocaldb;Database=ValeevaZoomag5;Trusted_Connection=true;TrustServerCertificate=true;",
+                "Server=(localdb)\\mssqllocaldb;Database=ValeevaZoomag6;Trusted_Connection=true;TrustServerCertificate=true;",
                 options => options.EnableRetryOnFailure(3));
     }
 

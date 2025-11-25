@@ -9,6 +9,4 @@ public class Supply
     public DateTime Date { get; set; }
 
     public List<SupplyItem> SupplyItems { get; set; } = new();
-
-    [NotMapped] public int TotalAmount => SupplyItems?.Sum(si => si.Total) ?? 0;
 }

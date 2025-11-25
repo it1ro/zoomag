@@ -1,10 +1,10 @@
 // Для SaveFileDialog
-
 namespace Zoomag.Views.Reports;
 
 using System.Windows;
 using ClosedXML.Excel;
-using Data;
+using Zoomag.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
 public partial class PriceListWindow : Window
@@ -18,15 +18,18 @@ public partial class PriceListWindow : Window
     private void LoadPriceList()
     {
         using var context = new AppDbContext();
-        // Загружаем только товары с количеством > 0, как в оригинальном методе
         var products = context.Product
-            .Where(product => product.Amount > 0)
-            .Select(product => new
+            .Select(p => new
             {
-                product.Name,
-                product.Price,
-                product.Amount
+                p.Name,
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                Stock = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
             })
+            .Where(x => x.Stock > 0)
             .ToList();
 
         PriceListGrid.ItemsSource = products;
@@ -34,46 +37,42 @@ public partial class PriceListWindow : Window
 
     private void ExportToExcel(object sender, RoutedEventArgs e)
     {
-        // Загружаем данные заново, как и при отображении
         using var context = new AppDbContext();
         var exportData = context.Product
-            .Where(product => product.Amount > 0)
-            .Select(product => new
+            .Select(p => new
             {
-                product.Name,
-                product.Price,
-                product.Amount
+                p.Name,
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                Stock = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
             })
+            .Where(x => x.Stock > 0)
             .ToList();
 
         if (!exportData.Any())
         {
-            MessageBox.Show("Нет данных для отчета.", "Информация",
+            MessageBox.Show("Нет данных для отчёта.", "Информация",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        // Диалог выбора файла
         var saveFileDialog = new SaveFileDialog
         {
             Filter = "Excel Files (.xlsx)|*.xlsx|All Files (*.*)|*.*",
-            FileName = $"Прайс-лист на {DateTime.Today:yyyy-MM-dd}.xlsx", // Имя файла по умолчанию
+            FileName = $"Прайс-лист на {DateTime.Today:yyyy-MM-dd}.xlsx",
             DefaultExt = ".xlsx",
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) // Начальная папка
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
         };
 
-        var result = saveFileDialog.ShowDialog(); // Показываем диалог
+        if (saveFileDialog.ShowDialog() != true) return;
 
-        if (result != true) // Проверяем, подтвердил ли пользователь
-            return; // Выходим из метода, если отменено
+        var fileName = saveFileDialog.FileName;
+        if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            fileName += ".xlsx";
 
-        var fileName = saveFileDialog.FileName; // Получаем выбранный путь
-
-        if (!fileName.EndsWith(".xlsx",
-                StringComparison.OrdinalIgnoreCase))
-            fileName += ".xlsx"; // Добавляем .xlsx, если пользователь не указал
-
-        // Создание Excel-файла
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Прайс-лист");
 
@@ -83,32 +82,29 @@ public partial class PriceListWindow : Window
         worksheet.Cell(3, 1).Value = "Наименование";
         worksheet.Cell(3, 2).Value = "Цена";
         worksheet.Cell(3, 3).Value = "Количество";
-
-        worksheet.Range(3, 1, 3, 3).Style.Font.Bold = true; // Жирный шрифт для заголовков
+        worksheet.Range(3, 1, 3, 3).Style.Font.Bold = true;
 
         var row = 4;
         foreach (var item in exportData)
         {
             worksheet.Cell(row, 1).Value = item.Name;
             worksheet.Cell(row, 2).Value = item.Price;
-            worksheet.Cell(row, 3).Value = item.Amount;
+            worksheet.Cell(row, 3).Value = item.Stock;
             row++;
         }
 
         worksheet.Cell(exportData.Count + 5, 1).Value = $"{exportData.Count} товаров";
-
-        // Автоширина столбцов
         worksheet.Columns().AdjustToContents();
 
         try
         {
-            workbook.SaveAs(fileName); // Сохраняем в выбранный файл
-            MessageBox.Show($"Отчет сохранен: {fileName}", "Успех",
+            workbook.SaveAs(fileName);
+            MessageBox.Show($"Отчёт сохранён: {fileName}", "Успех",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}",
+            MessageBox.Show($"Ошибка при сохранении отчёта: {ex.Message}",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

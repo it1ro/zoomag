@@ -2,7 +2,7 @@ namespace Zoomag.Services;
 
 using System.Windows;
 using ClosedXML.Excel;
-using Data;
+using Zoomag.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
@@ -17,18 +17,24 @@ public class ZeroStockReportGenerator
 
     public string GenerateReport(string outputPath = null)
     {
-        // 1. Получаем товары с нулевым остатком, подгружая связи
+        // Вычисляем остаток на лету: поставки - продажи
         var zeroStockItems = _context.Product
-            .Include(t => t.Category) // Подгружаем категории
-            .Include(t => t.Unit) // Подгружаем единицы измерения
-            .Where(t => t.Amount == 0)
-            .Select(t => new
+            .Select(p => new
             {
-                t.Name,
-                Category = t.Category != null ? t.Category.Name : "Без категории",
-                Unit = t.Unit != null ? t.Unit.Name : "Без ед.изм.",
-                t.Price
+                p.Id,
+                p.Name,
+                CategoryName = p.Category != null ? p.Category.Name : "Без категории",
+                UnitName = p.Unit != null ? p.Unit.Name : "Без ед.изм.",
+                // Цена из последней поставки
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                // Остаток: поставки - продажи
+                Stock = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
             })
+            .Where(x => x.Stock == 0)
             .OrderBy(x => x.Name)
             .ToList();
 
@@ -52,8 +58,8 @@ public class ZeroStockReportGenerator
         foreach (var item in zeroStockItems)
         {
             ws.Cell(row, 1).Value = item.Name;
-            ws.Cell(row, 2).Value = item.Category;
-            ws.Cell(row, 3).Value = item.Unit;
+            ws.Cell(row, 2).Value = item.CategoryName;
+            ws.Cell(row, 3).Value = item.UnitName;
             ws.Cell(row, 4).Value = item.Price;
             row++;
         }
@@ -88,7 +94,6 @@ public class ZeroStockReportGenerator
         }
 
         workbook.SaveAs(outputPath);
-
         return outputPath;
     }
 }

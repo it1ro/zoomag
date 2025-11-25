@@ -12,7 +12,7 @@ using Zoomag.Data;
 namespace Zoomag.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251124213503_InitialCreate")]
+    [Migration("20251125005234_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -50,18 +50,12 @@ namespace Zoomag.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Amount")
-                        .HasColumnType("int");
-
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
 
                     b.Property<int>("UnitId")
                         .HasColumnType("int");
@@ -83,19 +77,12 @@ namespace Zoomag.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Amount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Date")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -108,6 +95,12 @@ namespace Zoomag.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.HasKey("SaleId", "ProductId");

@@ -51,20 +51,24 @@ public partial class ProductEditorWindow : Window
             return;
         }
 
+        // ✅ Копируем ТОЛЬКО справочные поля
         var productCopy = new Product
         {
             Id = selected.Id,
             Name = selected.Name,
-            Price = selected.Price,
             CategoryId = selected.CategoryId,
-            UnitId = selected.UnitId,
-            Amount = selected.Amount
+            UnitId = selected.UnitId
+            // ❌ НЕТ Price, Amount
         };
 
         var dialog = new ProductEditDialog(productCopy) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
-            _context.Entry(selected).CurrentValues.SetValues(dialog.Result);
+            // Обновляем только допустимые свойства
+            selected.Name = dialog.Result.Name;
+            selected.CategoryId = dialog.Result.CategoryId;
+            selected.UnitId = dialog.Result.UnitId;
+
             try
             {
                 _context.SaveChanges();

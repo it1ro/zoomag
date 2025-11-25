@@ -19,7 +19,7 @@
                 <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="200"/>
                 <DataGridTextColumn Header="Категория" Binding="{Binding Category.Name}" Width="150"/>
                 <DataGridTextColumn Header="Ед. изм." Binding="{Binding Unit.Name}" Width="100"/>
-                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="80"/>
+                <!-- ❌ УДАЛЕНО: <DataGridTextColumn Header="Цена" ... /> -->
             </DataGrid.Columns>
         </DataGrid>
 

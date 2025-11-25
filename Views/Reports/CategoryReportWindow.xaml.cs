@@ -1,17 +1,14 @@
 ﻿// Добавлено для SaveFileDialog
-
 namespace Zoomag.Views.Reports;
 
 using System.Windows;
 using System.Windows.Controls;
 using ClosedXML.Excel;
-using Data;
+using Zoomag.Data;
+using Zoomag.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
-/// <summary>
-///     Логика взаимодействия для CategoryReportWindow.xaml
-/// </summary>
 public partial class CategoryReportWindow : Window
 {
     public CategoryReportWindow()
@@ -23,7 +20,8 @@ public partial class CategoryReportWindow : Window
     private void LoadCategories()
     {
         using var context = new AppDbContext();
-        foreach (var category in context.Category.ToList()) CategorySelector.Items.Add(category.Name);
+        foreach (var category in context.Category.OrderBy(c => c.Name).ToList())
+            CategorySelector.Items.Add(category.Name);
     }
 
     private void ExportToExcel(object sender, RoutedEventArgs e)
@@ -35,70 +33,71 @@ public partial class CategoryReportWindow : Window
             return;
         }
 
-        // --- Новый код для выбора места сохранения ---
         var saveFileDialog = new SaveFileDialog
         {
-            Filter = "Excel Files (.xlsx)|*.xlsx|All Files (*.*)|*.*", // Фильтр типов файлов
-            // Используем выбранную категорию в имени файла
+            Filter = "Excel Files (.xlsx)|*.xlsx|All Files (*.*)|*.*",
             FileName = $"Отчет по категории {CategorySelector.SelectedItem} {DateTime.Now:yyyy-MM-dd}.xlsx",
-            DefaultExt = ".xlsx", // Расширение по умолчанию
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) // Начальная папка
+            DefaultExt = ".xlsx",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
         };
 
-        var result = saveFileDialog.ShowDialog(); // Показываем диалог
+        if (saveFileDialog.ShowDialog() != true) return;
 
-        if (result != true) // Проверяем, подтвердил ли пользователь
-            return; // Выходим из метода, если отменено
-
-        var fileName = saveFileDialog.FileName; // Получаем выбранный путь
-
-        if (!fileName.EndsWith(".xlsx",
-                StringComparison.OrdinalIgnoreCase))
-            fileName += ".xlsx"; // Добавляем .xlsx, если пользователь не указал
-        // --- Конец нового кода ---
+        var fileName = saveFileDialog.FileName;
+        if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            fileName += ".xlsx";
 
         using var context = new AppDbContext();
-        var selectedCategory = CategorySelector.SelectedItem.ToString();
+        var selectedCategoryName = CategorySelector.SelectedItem.ToString();
+
+        // 🔁 Вычисляем остаток и цену динамически
         var products = context.Product
-            .Where(product => product.Category.Name == selectedCategory)
-            .Select(product => new
+            .Include(p => p.Category)
+            .Include(p => p.Unit)
+            .Include(p => p.SupplyItems).ThenInclude(si => si.Supply)
+            .Include(p => p.SaleItems)
+            .Where(p => p.Category.Name == selectedCategoryName)
+            .Select(p => new
             {
-                product.Name,
-                product.Amount,
-                product.Price,
-                product.Category,
-                product.Unit
-            });
+                p.Name,
+                CategoryName = p.Category.Name,
+                UnitName = p.Unit.Name,
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                Stock = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
+            })
+            .OrderBy(x => x.Name)
+            .ToList();
 
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Отчет по категории");
 
-        worksheet.Cell(1, 1).Value = "Отчет по категориям на";
-        worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d,yyyy");
+        worksheet.Cell(1, 1).Value = "Отчет по категории на";
+        worksheet.Cell(1, 3).Value = DateTime.Today.ToString("MMMM d, yyyy");
 
         worksheet.Cell(3, 1).Value = "Наименование";
-        worksheet.Cell(3, 3).Value = "Количество";
-        worksheet.Cell(3, 5).Value = "Цена";
-        worksheet.Cell(3, 7).Value = "Категория";
-        worksheet.Cell(3, 9).Value = "Ед/изм";
+        worksheet.Cell(3, 2).Value = "Количество";
+        worksheet.Cell(3, 3).Value = "Цена";
+        worksheet.Cell(3, 4).Value = "Категория";
+        worksheet.Cell(3, 5).Value = "Ед/изм";
 
         var row = 4;
-        var productCount = 0;
-
-        foreach (var product in products)
+        foreach (var p in products)
         {
-            worksheet.Cell(row, 1).Value = product.Name;
-            worksheet.Cell(row, 3).Value = product.Amount;
-            worksheet.Cell(row, 5).Value = product.Price;
-            worksheet.Cell(row, 7).Value = product.Category.Name;
-            worksheet.Cell(row, 9).Value = product.Unit.Name;
+            worksheet.Cell(row, 1).Value = p.Name;
+            worksheet.Cell(row, 2).Value = p.Stock;
+            worksheet.Cell(row, 3).Value = p.Price;
+            worksheet.Cell(row, 4).Value = p.CategoryName;
+            worksheet.Cell(row, 5).Value = p.UnitName;
             row++;
-            productCount++;
         }
 
-        worksheet.Cell(productCount + 5, 1).Value = $"{productCount} товаров";
+        worksheet.Cell(row + 1, 1).Value = $"{products.Count} товаров";
+        worksheet.Columns().AdjustToContents();
 
-        // Сохраняем в выбранный пользователем файл
         try
         {
             workbook.SaveAs(fileName);
@@ -124,10 +123,29 @@ public partial class CategoryReportWindow : Window
         if (CategorySelector.SelectedItem == null) return;
 
         using var context = new AppDbContext();
-        CategoryProductsGrid.ItemsSource = context.Product
-            .Include(product => product.Category)
-            .Include(product => product.Unit)
-            .Where(product => product.Category.Name == CategorySelector.SelectedItem.ToString())
+        var categoryName = CategorySelector.SelectedItem.ToString();
+
+        // 🔁 То же самое для отображения в DataGrid
+        var products = context.Product
+            .Include(p => p.Category)
+            .Include(p => p.Unit)
+            .Include(p => p.SupplyItems).ThenInclude(si => si.Supply)
+            .Include(p => p.SaleItems)
+            .Where(p => p.Category.Name == categoryName)
+            .Select(p => new
+            {
+                p.Name,
+                CategoryName = p.Category.Name,
+                UnitName = p.Unit.Name,
+                Price = p.SupplyItems
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault() != null
+                    ? p.SupplyItems.OrderByDescending(si => si.Supply.Date).FirstOrDefault().Price
+                    : 0,
+                Stock = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
+            })
             .ToList();
+
+        CategoryProductsGrid.ItemsSource = products;
     }
 }

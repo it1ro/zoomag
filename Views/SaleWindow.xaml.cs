@@ -1,28 +1,29 @@
-﻿namespace Zoomag.Views;
-
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Data;
+using Zoomag.Data;
+using Zoomag.Models;
 using Microsoft.EntityFrameworkCore;
-using Models;
+using System.Collections.ObjectModel;
+
+namespace Zoomag.Views;
 
 public partial class SaleWindow : Window
 {
-    private List<Category> _allCategories;
-    private List<ProductDisplayDto> _allProducts;
-    private List<Unit> _allUnits;
-    private List<ReceiptItem> _receiptItems;
+    private List<ProductDisplayDto> _allProducts = new();
+    private ObservableCollection<ReceiptItem> _receiptItems;
 
     public SaleWindow()
     {
         InitializeComponent();
+        _receiptItems = new ObservableCollection<ReceiptItem>();
+        ReceiptItemsGrid.ItemsSource = _receiptItems; // Привязка один раз
         InitializeData();
     }
 
     private void InitializeData()
     {
-        _receiptItems = new List<ReceiptItem>();
+        _receiptItems.Clear();
         LoadAllData();
     }
 
@@ -30,134 +31,112 @@ public partial class SaleWindow : Window
     {
         try
         {
-            using (var context = new AppDbContext())
+            using var context = new AppDbContext();
+            var products = context.Product
+                .Include(p => p.Category)
+                .Include(p => p.Unit)
+                .Include(p => p.SupplyItems).ThenInclude(si => si.Supply)
+                .Include(p => p.SaleItems)
+                .ToList();
+
+            _allProducts = products.Select(p => new ProductDisplayDto
             {
-                var products = context.Product
-                    .Include(p => p.Category)
-                    .Include(p => p.Unit)
-                    .ToList();
+                Id = p.Id,
+                Name = p.Name,
+                CategoryName = p.Category?.Name ?? "Без категории",
+                UnitName = p.Unit?.Name ?? "шт",
+                Price = p.SupplyItems
+                    .Where(si => si.Supply != null)
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault()?.Price ?? 0,
+                Qty = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
+            }).ToList();
 
-                _allProducts = products.Select(p => new ProductDisplayDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    CategoryName = p.Category?.Name ?? "Без категории",
-                    UnitName = p.Unit?.Name ?? "шт",
-                    Price = p.Price,
-                    Qty = p.Amount
-                }).ToList();
-
-                _allCategories = context.Category.ToList();
-                _allUnits = context.Unit.ToList();
-
-                ProductListGrid.ItemsSource = _allProducts;
-            }
+            ProductListGrid.ItemsSource = _allProducts;
+            UpdateReceiptSummary();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка загрузки данных: {ex.Message}",
-                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Ошибка загрузки данных: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
-    private void SearchInput_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        FilterProducts();
-    }
+    private void SearchInput_TextChanged(object sender, TextChangedEventArgs e) => FilterProducts();
 
     private void FilterProducts()
     {
-        var searchTerm = SearchInput.Text?.Trim().ToLower() ?? "";
-        var filteredProducts = _allProducts.Where(p =>
-            string.IsNullOrEmpty(searchTerm) ||
-            p.Name.ToLower().Contains(searchTerm) ||
-            p.CategoryName.ToLower().Contains(searchTerm)
+        var term = SearchInput.Text?.Trim().ToLower() ?? "";
+        var filtered = _allProducts.Where(p =>
+            string.IsNullOrEmpty(term) ||
+            p.Name.ToLower().Contains(term) ||
+            p.CategoryName.ToLower().Contains(term)
         ).ToList();
-        ProductListGrid.ItemsSource = filteredProducts;
+        ProductListGrid.ItemsSource = filtered;
     }
 
     private void AddSelectedProductToReceipt(object sender, RoutedEventArgs e)
     {
-        if (ProductListGrid.SelectedItem == null)
+        if (ProductListGrid.SelectedItem is not ProductDisplayDto dto)
         {
-            MessageBox.Show("Пожалуйста, выберите товар для добавления в чек!",
-                "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Выберите товар для добавления в чек!", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        var selectedProductDto = (ProductDisplayDto)ProductListGrid.SelectedItem;
-
-        if (selectedProductDto.Qty <= 0)
+        if (dto.Qty <= 0)
         {
-            MessageBox.Show("Товар закончился на складе!",
-                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Товар закончился на складе!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var existingItem = _receiptItems.FirstOrDefault(r => r.ProductId == selectedProductDto.Id);
-        if (existingItem != null)
+        var existing = _receiptItems.FirstOrDefault(r => r.ProductId == dto.Id);
+        if (existing != null)
         {
-            existingItem.Quantity++;
-            existingItem.Total = existingItem.Quantity * existingItem.Price;
-            ReceiptItemsGrid.Items.Refresh();
+            existing.Quantity++;
         }
         else
         {
             _receiptItems.Add(new ReceiptItem
             {
-                ProductId = selectedProductDto.Id,
-                Name = selectedProductDto.Name,
-                Price = selectedProductDto.Price,
-                Quantity = 1,
-                Total = selectedProductDto.Price
+                ProductId = dto.Id,
+                Name = dto.Name,
+                Price = dto.Price,
+                Quantity = 1
             });
-            ReceiptItemsGrid.Items.Refresh();
         }
 
-        selectedProductDto.Qty--;
-        ProductListGrid.Items.Refresh();
-
-        UpdateReceiptDisplay();
+        dto.Qty--;
+        ProductListGrid.Items.Refresh(); // ProductDisplayDto не INPC — обновляем вручную
+        UpdateReceiptSummary();
     }
 
     private void RemoveItemFromReceipt(object sender, RoutedEventArgs e)
     {
         var button = sender as Button;
-        var dataGridRow = FindParent<DataGridRow>(button);
-        var receiptItem = dataGridRow?.DataContext as ReceiptItem;
-        if (receiptItem != null)
-        {
-            var productDto = _allProducts.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-            if (productDto != null) productDto.Qty += receiptItem.Quantity;
+        var row = FindParent<DataGridRow>(button);
+        var item = row?.DataContext as ReceiptItem;
+        if (item == null) return;
 
-            _receiptItems.Remove(receiptItem);
-            ReceiptItemsGrid.Items.Refresh();
-            ProductListGrid.Items.Refresh();
-            UpdateReceiptDisplay();
-        }
+        var dto = _allProducts.First(p => p.Id == item.ProductId);
+        dto.Qty += item.Quantity;
+        _receiptItems.Remove(item);
+        ProductListGrid.Items.Refresh();
+        UpdateReceiptSummary();
     }
 
     private void ClearCurrentReceipt(object sender, RoutedEventArgs e)
     {
-        if (_receiptItems.Count == 0)
-        {
-            MessageBox.Show("Чек пуст!", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        if (_receiptItems.Count == 0) return;
 
-        if (MessageBox.Show("Вы уверены, что хотите очистить чек?", "Подтверждение",
-                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+        if (MessageBox.Show("Очистить чек?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
-            foreach (var receiptItem in _receiptItems)
+            foreach (var item in _receiptItems.ToList()) // ToList() — избегаем модификации при итерации
             {
-                var productDto = _allProducts.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-                if (productDto != null) productDto.Qty += receiptItem.Quantity;
+                var dto = _allProducts.First(p => p.Id == item.ProductId);
+                dto.Qty += item.Quantity;
             }
-
             _receiptItems.Clear();
-            ReceiptItemsGrid.Items.Refresh();
             ProductListGrid.Items.Refresh();
-            UpdateReceiptDisplay();
+            UpdateReceiptSummary();
         }
     }
 
@@ -165,83 +144,64 @@ public partial class SaleWindow : Window
     {
         if (_receiptItems.Count == 0)
         {
-            MessageBox.Show("Чек пуст! Добавьте товары перед покупкой.",
-                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Чек пуст!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         using var context = new AppDbContext();
         try
         {
-            var hasInsufficientStock = false;
-            var insufficientProducts = new List<string>();
-
             foreach (var receiptItem in _receiptItems)
             {
-                var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-                if (product != null && product.Amount < receiptItem.Quantity)
+                var currentStock = context.Product
+                    .Where(p => p.Id == receiptItem.ProductId)
+                    .Select(p => p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity))
+                    .FirstOrDefault();
+
+                if (currentStock < receiptItem.Quantity)
                 {
-                    hasInsufficientStock = true;
-                    insufficientProducts.Add(
-                        $"{product.Name} (требуется {receiptItem.Quantity}, доступно {product.Amount})");
+                    var name = context.Product.Find(receiptItem.ProductId)?.Name ?? "Неизвестно";
+                    MessageBox.Show($"Недостаточно товара: {name} (требуется {receiptItem.Quantity}, доступно {currentStock})", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
-            }
-
-            if (hasInsufficientStock)
-            {
-                var message = "Недостаточно товара на складе:\n" + string.Join("\n", insufficientProducts);
-                MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            foreach (var receiptItem in _receiptItems)
-            {
-                var product = context.Product.FirstOrDefault(p => p.Id == receiptItem.ProductId);
-                if (product != null) product.Amount -= receiptItem.Quantity;
             }
 
             var sale = new Sale
             {
                 Name = $"Продажа от {DateTime.Now:dd.MM.yyyy HH:mm}",
-                Date = DateTime.Now.ToString("dd.MM.yyyy HH:mm"),
-                Price = _receiptItems.Sum(r => r.Total),
-                Amount = _receiptItems.Sum(r => r.Quantity)
+                Date = DateTime.Now
             };
-
             context.Sale.Add(sale);
             context.SaveChanges();
 
-            foreach (var receiptItem in _receiptItems)
+            foreach (var item in _receiptItems)
             {
-                var saleItem = new SaleItem
+                context.SaleItem.Add(new SaleItem
                 {
                     SaleId = sale.Id,
-                    ProductId = receiptItem.ProductId
-                };
-                context.SaleItem.Add(saleItem);
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                });
             }
 
             context.SaveChanges();
 
-            MessageBox.Show($"Покупка успешно оформлена!\nОбщая сумма: {_receiptItems.Sum(r => r.Total)} руб.",
-                "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"Покупка оформлена! Сумма: {_receiptItems.Sum(r => r.Total)} руб.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
 
             _receiptItems.Clear();
-            UpdateReceiptDisplay();
-            LoadAllData();
+            LoadAllData(); // перезагружаем остатки
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка при оформлении покупки: {ex.Message}", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Ошибка при оформлении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
     private void ReturnToMainMenu(object sender, RoutedEventArgs e)
     {
-        var adminWindow = new AdminWindow();
-        Hide();
-        adminWindow.Show();
+        new AdminWindow().Show();
+        Close();
     }
 
     private void RefreshProductList(object sender, RoutedEventArgs e)
@@ -250,41 +210,30 @@ public partial class SaleWindow : Window
         SearchInput.Clear();
     }
 
-
-    private void UpdateReceiptDisplay()
+    private void UpdateReceiptSummary()
     {
-        ReceiptItemsGrid.ItemsSource = _receiptItems;
-        var itemCount = _receiptItems.Sum(r => r.Quantity);
-        var totalAmount = _receiptItems.Sum(r => r.Total);
-        ItemCountDisplay.Text = itemCount.ToString();
-        TotalAmountDisplay.Text = totalAmount.ToString();
+        ItemCountDisplay.Text = _receiptItems.Sum(r => r.Quantity).ToString();
+        TotalAmountDisplay.Text = _receiptItems.Sum(r => r.Total).ToString();
     }
 
     private static T FindParent<T>(DependencyObject child) where T : DependencyObject
     {
-        var parentObject = VisualTreeHelper.GetParent(child);
-        if (parentObject == null) return null;
-        var parent = parentObject as T;
-        if (parent != null) return parent;
-        return FindParent<T>(parentObject);
+        var parent = VisualTreeHelper.GetParent(child);
+        return parent switch
+        {
+            null => null,
+            T p => p,
+            _ => FindParent<T>(parent)
+        };
     }
 }
 
 public class ProductDisplayDto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
-    public string CategoryName { get; set; }
-    public string UnitName { get; set; }
+    public string Name { get; set; } = null!;
+    public string CategoryName { get; set; } = null!;
+    public string UnitName { get; set; } = null!;
     public int Price { get; set; }
     public int Qty { get; set; }
-}
-
-public class ReceiptItem
-{
-    public int ProductId { get; set; }
-    public string Name { get; set; }
-    public int Price { get; set; }
-    public int Quantity { get; set; }
-    public int Total { get; set; }
 }
