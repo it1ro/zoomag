@@ -1,3 +1,4 @@
+// Zoomag/Models/ReceiptItem.cs
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -9,15 +10,31 @@ namespace Zoomag.Models
         public string Name { get; set; } = null!;
         public int Price { get; set; }
 
+        private int _maxQuantity;
+        public int MaxQuantity
+        {
+            get => _maxQuantity;
+            set
+            {
+                if (_maxQuantity != value)
+                {
+                    _maxQuantity = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         private int _quantity = 1;
         public int Quantity
         {
             get => _quantity;
             set
             {
-                if (_quantity != value && value > 0)
+                // Ограничиваем значение
+                var clamped = Math.Max(1, Math.Min(value, _maxQuantity));
+                if (_quantity != clamped)
                 {
-                    _quantity = value;
+                    _quantity = clamped;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(Total));
                 }

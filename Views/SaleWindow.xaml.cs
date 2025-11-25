@@ -91,7 +91,8 @@ public partial class SaleWindow : Window
         var existing = _receiptItems.FirstOrDefault(r => r.ProductId == dto.Id);
         if (existing != null)
         {
-            existing.Quantity++;
+            // Увеличиваем, но не более чем доступно
+            existing.Quantity++; // сеттер сам ограничит по MaxQuantity
         }
         else
         {
@@ -100,12 +101,13 @@ public partial class SaleWindow : Window
                 ProductId = dto.Id,
                 Name = dto.Name,
                 Price = dto.Price,
-                Quantity = 1
+                Quantity = 1,
+                MaxQuantity = dto.Qty // ← важно!
             });
         }
 
         dto.Qty--;
-        ProductListGrid.Items.Refresh(); // ProductDisplayDto не INPC — обновляем вручную
+        ProductListGrid.Items.Refresh();
         UpdateReceiptSummary();
     }
 
