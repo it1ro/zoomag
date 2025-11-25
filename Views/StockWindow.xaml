@@ -1,52 +1,42 @@
 ﻿<Window x:Class="Zoomag.Views.StockWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Склад" Height="650" Width="1000"
+        Title="Склад" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="15">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Поиск по названию:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <TextBox x:Name="SearchBox" Width="200" Margin="0,0,15,0" TextChanged="OnFilterChanged"/>
+        <TextBlock Grid.Row="0"
+                   Text="Товары на складе"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,15"
+                   FontSize="18" />
 
-            <TextBlock Text="Категория:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <ComboBox x:Name="CategoryFilter" MinWidth="150" Margin="0,0,15,0" SelectionChanged="OnFilterChanged">
-                <ComboBoxItem Content="Все категории" Tag="-1"/>
-            </ComboBox>
-
-            <Button Content="Сбросить фильтры" Click="ResetFilters" Width="150"/>
-        </StackPanel>
-
-        <DataGrid x:Name="StockGrid"
+        <DataGrid x:Name="StockDataGrid"
                   Grid.Row="1"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   CanUserAddRows="False"
                   HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  SelectionUnit="FullRow">
+                  GridLinesVisibility="Horizontal">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Категория" Binding="{Binding Category.Name}" Width="150"/>
-                <DataGridTextColumn Header="Ед. изм." Binding="{Binding Unit.Name}" Width="100"/>
-                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="80"/>
-                <DataGridTextColumn Header="Остаток" Binding="{Binding Amount}" Width="80"/>
-                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalValue}" Width="100"/>
+                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*" />
+                <DataGridTextColumn Header="Категория" Binding="{Binding CategoryName}" Width="120" />
+                <DataGridTextColumn Header="Ед. изм." Binding="{Binding UnitName}" Width="80" />
+                <DataGridTextColumn Header="Цена, ₽" Binding="{Binding Price}" Width="100" />
+                <DataGridTextColumn Header="Остаток" Binding="{Binding Qty}" Width="80" />
             </DataGrid.Columns>
         </DataGrid>
 
-        <Border Grid.Row="2" Padding="10" Background="#f5f6fa" Margin="0,10,0,0">
-            <TextBlock x:Name="TotalSummaryText" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right"/>
-        </Border>
-
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="Назад" Click="GoToAdmin" Width="100"/>
-        </StackPanel>
+        <Button Grid.Row="2"
+                Content="Назад"
+                HorizontalAlignment="Right"
+                Padding="20,5"
+                Click="GoBack_Click" />
     </Grid>
 </Window>

@@ -7,9 +7,16 @@
         Title="Отчет по складу" Height="450" Width="800">
     <DockPanel>
         <StackPanel DockPanel.Dock="Right" Width="200" Margin="10">
-            <Button x:Name="ExportToExcelButton" Content="Вывод в Excel" Click="ExportToExcel" />
-            <Button x:Name="BackButton" Content="Назад" Click="GoToAdmin" />
+            <Button x:Name="ExportToExcelButton" Content="Вывод в Excel" Click="ExportToExcel" Padding="5" Margin="0,0,0,10" />
+            <Button x:Name="BackButton" Content="Назад" Click="GoToAdmin" Padding="5" />
         </StackPanel>
-        <DataGrid x:Name="StockReportGrid" AutoGenerateColumns="False" />
+        <DataGrid x:Name="StockReportGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*" />
+                <DataGridTextColumn Header="Цена (руб.)" Binding="{Binding Price}" Width="100" />
+                <DataGridTextColumn Header="Остаток" Binding="{Binding Amount}" Width="100" />
+                <DataGridTextColumn Header="Общая стоимость" Binding="{Binding TotalValue}" Width="120" />
+            </DataGrid.Columns>
+        </DataGrid>
     </DockPanel>
 </Window>

@@ -1,8 +1,10 @@
-﻿namespace Zoomag.Views.Reports;
-
+﻿using System;
+using System.Linq;
 using System.Windows;
-using Data;
+using Zoomag.Data;
 using Microsoft.EntityFrameworkCore;
+
+namespace Zoomag.Views.Reports;
 
 public partial class DailyGoodsReceiptReportWindow : Window
 {
@@ -15,11 +17,9 @@ public partial class DailyGoodsReceiptReportWindow : Window
 
     private void LoadData()
     {
-        var selectedDate = DeliveryDatePicker.SelectedDate;
+        var selectedDate = DeliveryDatePicker.SelectedDate?.Date;
         if (!selectedDate.HasValue)
             return;
-
-        var date = selectedDate.Value.Date;
 
         try
         {
@@ -27,29 +27,27 @@ public partial class DailyGoodsReceiptReportWindow : Window
             var supplyItems = context.SupplyItem
                 .Include(si => si.Supply)
                 .Include(si => si.Product)
-                .Where(si => si.Supply.Date != null && si.Supply.Date == date)
+                .Where(si => si.Supply.Date.Date == selectedDate.Value)
                 .ToList();
 
-            var reportItems = supplyItems
-                .Select(si => new ReportItem
-                {
-                    Name = si.Product.Name,
-                    Amount = si.Quantity,
-                    Price = si.Price,
-                    Total = si.Total
-                })
-                .ToList();
+            var reportItems = supplyItems.Select(si => new ReportItem
+            {
+                Name = si.Product.Name,
+                Amount = si.Quantity,
+                Price = si.Price,
+                Total = si.Total
+            }).ToList();
 
             var totalSum = reportItems.Sum(r => r.Total);
             var totalQuantity = reportItems.Sum(r => r.Amount);
 
-            TotalAmountDisplay.Text = totalSum.ToString();
-            TotalQuantityDisplay.Text = totalQuantity.ToString();
+            TotalAmountDisplay.Text = totalSum.ToString("N0");
+            TotalQuantityDisplay.Text = totalQuantity.ToString("N0");
             ReportDataGrid.ItemsSource = reportItems;
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Ошибка при загрузке данных: {ex.Message}\nТип ошибки: {ex.GetType().Name}",
+            MessageBox.Show($"Ошибка при загрузке данных: {ex.Message}",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -73,9 +71,10 @@ public partial class DailyGoodsReceiptReportWindow : Window
     }
 }
 
+// Вспомогательный класс для отображения
 public class ReportItem
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int Amount { get; set; }
     public int Price { get; set; }
     public int Total { get; set; }

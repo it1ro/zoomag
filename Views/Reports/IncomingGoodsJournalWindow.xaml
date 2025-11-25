@@ -11,13 +11,13 @@
             <ColumnDefinition />
             <ColumnDefinition />
             <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <DataGrid x:Name="GoodsReceiptsGrid"
@@ -25,44 +25,44 @@
                   Grid.Column="0"
                   Grid.Row="0"
                   Grid.ColumnSpan="4"
-                  Grid.RowSpan="4"
                   FontSize="15"
-                  IsReadOnly="True">
+                  IsReadOnly="True"
+                  CanUserAddRows="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Дата"
-                                    Binding="{Binding Path=SupplyDate, StringFormat=d}"
+                                    Binding="{Binding SupplyDate, StringFormat=dd.MM.yyyy}"
                                     Width="100" />
                 <DataGridTextColumn Header="Наименование"
-                                    Binding="{Binding Path=ProductName}"
+                                    Binding="{Binding ProductName}"
                                     Width="250" />
                 <DataGridTextColumn Header="Количество"
-                                    Binding="{Binding Path=Quantity, StringFormat=N2}"
-                                    Width="80" />
-                <DataGridTextColumn Header="Цена"
-                                    Binding="{Binding Path=Price, StringFormat=C2}"
+                                    Binding="{Binding Quantity, StringFormat=N0}"
                                     Width="100" />
-                <!-- Исправленный столбец "Общая сумма" -->
-                <DataGridTextColumn Header="Общая сумма"
-                                    Width="120">
-                    <DataGridTextColumn.Binding>
-                        <Binding Path="Total" StringFormat="C2" Mode="OneTime" />
-                    </DataGridTextColumn.Binding>
-                </DataGridTextColumn>
+                <DataGridTextColumn Header="Цена, ₽"
+                                    Binding="{Binding Price, StringFormat=N2}"
+                                    Width="100" />
+                <DataGridTextColumn Header="Сумма, ₽"
+                                    Binding="{Binding Total, StringFormat=N2}"
+                                    Width="120" />
             </DataGrid.Columns>
         </DataGrid>
 
-        <Button x:Name="BackButton"
-                Content="Назад"
-                FontSize="24"
-                Grid.Row="3"
-                Grid.Column="4"
-                Click="BackButton_Click" />
-
         <Button x:Name="ExportToExcelButton"
                 Content="Вывод в Excel"
-                FontSize="24"
+                FontSize="16"
+                Grid.Row="1"
+                Grid.Column="4"
+                Margin="10"
+                Padding="10,5"
+                Click="ExportToExcel" />
+
+        <Button x:Name="BackButton"
+                Content="Назад"
+                FontSize="16"
                 Grid.Row="2"
                 Grid.Column="4"
-                Click="ExportToExcel" />
+                Margin="10"
+                Padding="10,5"
+                Click="BackButton_Click" />
     </Grid>
 </Window>

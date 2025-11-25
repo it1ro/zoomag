@@ -12,7 +12,14 @@
             <Button x:Name="ExportToExcelButton" Content="Вывод в Excel" Click="ExportToExcel" />
             <Button x:Name="BackButton" Content="Назад" Click="GoToAdmin" />
         </StackPanel>
-        <DataGrid x:Name="CategoryProductsGrid" AutoGenerateColumns="False" ItemsSource="{Binding Privoz}" />
-        <!-- TODO понять откуда Privoz и зачем -->
+        <DataGrid x:Name="CategoryProductsGrid" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*" />
+                <DataGridTextColumn Header="Категория" Binding="{Binding CategoryName}" Width="120" />
+                <DataGridTextColumn Header="Ед. изм." Binding="{Binding UnitName}" Width="80" />
+                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="80" />
+                <DataGridTextColumn Header="Остаток" Binding="{Binding Stock}" Width="80" />
+            </DataGrid.Columns>
+        </DataGrid>
     </DockPanel>
 </Window>

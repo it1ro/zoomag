@@ -1,6 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using Zoomag.Data;
 using Zoomag.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,120 +9,50 @@ namespace Zoomag.Views;
 
 public partial class StockWindow : Window
 {
-    private readonly AppDbContext _context;
-    private List<StockItemView> _allItems = new();
-
     public StockWindow()
     {
         InitializeComponent();
-        _context = new AppDbContext();
         LoadData();
-        LoadCategories();
     }
 
     private void LoadData()
     {
-        var products = _context.Product
-            .Include(p => p.Category)
-            .Include(p => p.Unit)
-            .Include(p => p.SupplyItems)
-            .Include(p => p.SaleItems)
-            .OrderBy(p => p.Name)
-            .ToList();
-
-        _allItems = products.Select(p => new StockItemView
+        try
         {
-            Id = p.Id,
-            Name = p.Name,
-            CategoryName = p.Category?.Name ?? "—",
-            UnitName = p.Unit?.Name ?? "—",
-            // Цена: последняя из поставок
-            Price = p.SupplyItems
-                .OrderByDescending(si => si.Supply.Date)
-                .FirstOrDefault()?.Price ?? 0,
-            // Остаток: поставки - продажи
-            Amount = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity),
-            CategoryId = p.CategoryId
-        }).ToList();
+            using var context = new AppDbContext();
+            var products = context.Product
+                .Include(p => p.Category)
+                .Include(p => p.Unit)
+                .Include(p => p.SupplyItems).ThenInclude(si => si.Supply)
+                .Include(p => p.SaleItems)
+                .ToList();
 
-        ApplyFilter();
-    }
+            var displayProducts = products.Select(p => new ProductDisplayDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                CategoryName = p.Category?.Name ?? "Без категории",
+                UnitName = p.Unit?.Name ?? "шт",
+                Price = p.SupplyItems
+                    .Where(si => si.Supply != null) // ← защита от NullReferenceException
+                    .OrderByDescending(si => si.Supply.Date)
+                    .FirstOrDefault()?.Price ?? 0,
+                Qty = p.SupplyItems.Sum(si => si.Quantity) - p.SaleItems.Sum(si => si.Quantity)
+            }).ToList();
 
-    private void LoadCategories()
-    {
-        var categories = _context.Category.OrderBy(c => c.Name).ToList();
-        CategoryFilter.Items.Clear();
-        CategoryFilter.Items.Add(new ComboBoxItem { Content = "Все категории", Tag = -1 });
-        foreach (var cat in categories)
-        {
-            CategoryFilter.Items.Add(new ComboBoxItem { Content = cat.Name, Tag = cat.Id });
+            StockDataGrid.ItemsSource = displayProducts;
         }
-        CategoryFilter.SelectedIndex = 0;
-    }
-
-    private void ApplyFilter()
-    {
-        var search = SearchBox.Text?.ToLower().Trim();
-        var selectedCategory = (CategoryFilter.SelectedItem as ComboBoxItem)?.Tag as int?;
-
-        var filtered = _allItems.AsEnumerable();
-
-        if (!string.IsNullOrEmpty(search))
+        catch (Exception ex)
         {
-            filtered = filtered.Where(p => p.Name.ToLower().Contains(search));
+            MessageBox.Show($"Ошибка при загрузке склада: {ex.Message}",
+                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-
-        if (selectedCategory.HasValue && selectedCategory != -1)
-        {
-            filtered = filtered.Where(p => p.CategoryId == selectedCategory.Value);
-        }
-
-        var result = filtered.ToList();
-        StockGrid.ItemsSource = result;
-
-        var total = result.Sum(item => item.TotalValue);
-        TotalSummaryText.Text = $"Общая стоимость: {total:N0} ₽";
     }
 
-    private void OnFilterChanged(object sender, TextChangedEventArgs e)
+    private void GoBack_Click(object sender, RoutedEventArgs e)
     {
-        ApplyFilter();
-    }
-
-    private void OnFilterChanged(object sender, SelectionChangedEventArgs e)
-    {
-        ApplyFilter();
-    }
-
-    private void ResetFilters(object sender, RoutedEventArgs e)
-    {
-        SearchBox.Clear();
-        CategoryFilter.SelectedIndex = 0;
-        ApplyFilter();
-    }
-
-    private void GoToAdmin(object sender, RoutedEventArgs e)
-    {
-        var admin = new AdminWindow();
+        var adminWindow = new AdminWindow();
         Hide();
-        admin.Show();
+        adminWindow.Show();
     }
-
-    protected override void OnClosed(System.EventArgs e)
-    {
-        _context?.Dispose();
-        base.OnClosed(e);
-    }
-}
-
-public class StockItemView
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string CategoryName { get; set; }
-    public string UnitName { get; set; }
-    public int Price { get; set; }
-    public int Amount { get; set; }
-    public int CategoryId { get; set; }
-    public int TotalValue => Amount * Price;
 }
