@@ -1,16 +1,31 @@
-namespace Zoomag.Views;
-
+using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
 using Zoomag.Data;
 using Zoomag.Models;
+
+namespace Zoomag.Views;
 
 public partial class LoginWindow : Window
 {
     public LoginWindow()
     {
         InitializeComponent();
-        RoleComboBox.ItemsSource = Enum.GetValues(typeof(UserRole));
-        RoleComboBox.SelectedIndex = 0; // Admin по умолчанию
+
+        // Заполняем ComboBox анонимными объектами с понятными названиями
+        RoleComboBox.ItemsSource = Enum.GetValues<UserRole>()
+            .Select(role => new
+            {
+                Value = role,
+                DisplayName = GetEnumDescription(role)
+            })
+            .ToList();
+
+        RoleComboBox.DisplayMemberPath = "DisplayName";
+        RoleComboBox.SelectedValuePath = "Value";
+        RoleComboBox.SelectedIndex = 0;
     }
 
     private void LoginButton_Click(object sender, RoutedEventArgs e)
@@ -24,7 +39,8 @@ public partial class LoginWindow : Window
             return;
         }
 
-        if (RoleComboBox.SelectedItem is not UserRole selectedRole)
+        // Используем SelectedValue — он уже будет типа UserRole
+        if (RoleComboBox.SelectedValue is not UserRole selectedRole)
         {
             MessageBox.Show("Выберите роль.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
@@ -36,10 +52,12 @@ public partial class LoginWindow : Window
 
         if (user != null)
         {
-            // Успешный вход
-            Window mainWindow = selectedRole == UserRole.Admin
-                ? new AdminWindow()
-                : new SellerWindow();
+            Window mainWindow = selectedRole switch
+            {
+                UserRole.Admin => new AdminWindow(),
+                UserRole.Seller => new SellerWindow(),
+                _ => throw new InvalidOperationException("Неизвестная роль")
+            };
 
             mainWindow.Show();
             Close();
@@ -50,5 +68,13 @@ public partial class LoginWindow : Window
             PasswordBox.Clear();
             LoginTextBox.Focus();
         }
+    }
+
+    // Вспомогательный метод для получения Description из enum
+    private static string GetEnumDescription<T>(T value) where T : struct, Enum
+    {
+        var field = typeof(T).GetField(value.ToString());
+        var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
+        return attribute?.Description ?? value.ToString();
     }
 }
